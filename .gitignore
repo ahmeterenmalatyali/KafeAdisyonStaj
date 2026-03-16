@@ -1,0 +1,180 @@
+# ============================================================
+#  KafeAdisyon — .NET MAUI (Android / iOS / MacCatalyst / Windows)
+#  Git tarafından takip edilmeyecek dosyalar
+# ============================================================
+
+
+# ------------------------------------------------------------
+# DERLEME ÇIKTILARI — bin / obj
+# ------------------------------------------------------------
+[Bb]in/
+[Oo]bj/
+[Oo]ut/
+[Ll]og/
+[Ll]ogs/
+
+
+# ------------------------------------------------------------
+# VISUAL STUDIO IDE DOSYALARI
+# ------------------------------------------------------------
+
+# VS solution user options (kişisel pencere/breakpoint ayarları)
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# VS gizli klasörü (workspace ayarları, arama indeksleri vb.)
+.vs/
+
+# Roslyn test runners
+_ReSharper*/
+*.ReSharper
+
+# Rider IDE
+.idea/
+*.sln.iml
+
+
+# ------------------------------------------------------------
+# NUGET PAKETLERİ
+# ------------------------------------------------------------
+packages/
+*.nupkg
+*.snupkg
+**/[Pp]ackages/
+!**/[Pp]ackages/build/         # Build integration dosyaları teslim edilebilir
+nuget.config                   # Özel feed/credential içeriyorsa
+
+# NuGet lock file — opsiyonel, takıma göre karar verin
+# packages.lock.json
+
+
+# ------------------------------------------------------------
+# HASSAS YAPILANDIRMA DOSYALARI ⚠️
+# (Supabase URL ve anahtar içeriyor)
+# ------------------------------------------------------------
+appsettings.json
+appsettings.*.json
+
+# Şablonları repoda bırakın (anahtar YOK, sadece yapı var):
+# appsettings.example.json
+# appsettings.test.example.json
+
+
+# ------------------------------------------------------------
+# .NET MAUI — PLATFORM DERLEME ÇIKTILARI
+# ------------------------------------------------------------
+
+# Android
+*.apk
+*.aab
+*.aar
+**/android/assets/
+**/android/bin/
+**/android/obj/
+
+# iOS / MacCatalyst
+*.ipa
+*.dSYM
+*.dSYM.zip
+build/
+DerivedData/
+*.xcarchive
+*.xcworkspace/xcuserdata/
+Pods/
+
+# Windows (MSIX paketleme)
+*.msix
+*.msixbundle
+*.msixupload
+AppPackages/
+BundleArtifacts/
+
+# Tizen
+*.tpk
+
+
+# ------------------------------------------------------------
+# TEST ÇIKTILARI
+# ------------------------------------------------------------
+TestResults/
+[Tt]est[Rr]esult*/
+*.trx
+*.coverage
+*.coveragexml
+coverage*/
+CoverageReport/
+BenchmarkDotNet.Artifacts/
+
+
+# ------------------------------------------------------------
+# YAYINLAMA / DAĞITIM
+# ------------------------------------------------------------
+[Pp]ublish/
+[Pp]ublish[Oo]utput/
+*_publish/
+*.pubxml
+*.pubxml.user
+*.azurePubxml
+ServiceFabricBackup/
+PublishProfiles/
+
+
+# ------------------------------------------------------------
+# WINDOWS / MacOS SİSTEM DOSYALARI
+# ------------------------------------------------------------
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+.AppleDouble
+.LSOverride
+Icon?
+
+
+# ------------------------------------------------------------
+# ORTAM VE GİZLİ DOSYALAR
+# ------------------------------------------------------------
+.env
+.env.*
+*.pfx
+*.p12
+*.key
+*.pem
+secrets.json
+secrets.*.json
+local.settings.json
+
+
+# ------------------------------------------------------------
+# ÇEŞITLI ARAÇLAR
+# ------------------------------------------------------------
+
+# StyleCop
+StyleCopReport.xml
+
+# NCrunch
+_NCrunch_*
+.*crunch*.local.xml
+nCrunchTemp_*
+
+# SonarQube
+.sonarqube/
+
+# DocFX
+_site/
+
+# Node (varsa araç scriptleri için)
+node_modules/
+npm-debug.log*
+
+# Crash dump dosyaları
+*.stackdump

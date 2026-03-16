@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="KafeAdisyon/KafeAdisyon.csproj" />
+  <Project Path="KafeAdisyon_IntegrationTests/KafeAdisyon_IntegrationTests.csproj" Id="fca807f2-7e6b-4ac1-9181-a9da9e9c3b9f" />
+  <Project Path="KafeAdisyon_Tests/KafeAdisyon_Tests.csproj" Id="de88f805-fd59-48f8-99ad-e6acd4aad750" />
+</Solution>

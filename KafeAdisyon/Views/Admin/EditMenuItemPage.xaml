@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="KafeAdisyon.Views.Admin.EditMenuItemPage"
+             BackgroundColor="#00000066">
+
+    <Grid>
+        <Button BackgroundColor="#000000"
+                Opacity="0.5"
+                BorderWidth="0"
+                CornerRadius="0"
+                Clicked="OnBackdropClicked"/>
+
+        <Border BackgroundColor="#FAF7F2"
+                StrokeThickness="0"
+                StrokeShape="RoundRectangle 20"
+                Padding="24,20"
+                VerticalOptions="Center"
+                HorizontalOptions="Center"
+                WidthRequest="340">
+            <VerticalStackLayout Spacing="16">
+
+                <Label Text="Ürünü Düzenle"
+                       FontSize="17"
+                       FontAttributes="Bold"
+                       TextColor="#3D2314"
+                       HorizontalOptions="Center"/>
+
+                <!-- Ad -->
+                <VerticalStackLayout Spacing="4">
+                    <Label Text="Ürün Adı" FontSize="12" TextColor="#A0856A"/>
+                    <Border BackgroundColor="White" StrokeThickness="1"
+                            Stroke="#E8D5C0" StrokeShape="RoundRectangle 10"
+                            Padding="12,0">
+                        <Entry x:Name="NameEntry"
+                               TextColor="#2C1810"
+                               BackgroundColor="Transparent"
+                               FontSize="14"
+                               HeightRequest="44"/>
+                    </Border>
+                </VerticalStackLayout>
+
+                <!-- Kategori -->
+                <VerticalStackLayout Spacing="6">
+                    <Label Text="Kategori" FontSize="12" TextColor="#A0856A"/>
+                    <FlexLayout x:Name="CategoryButtonsLayout"
+                                Wrap="Wrap"
+                                JustifyContent="Start"
+                                AlignItems="Start"/>
+                </VerticalStackLayout>
+
+                <!-- Fiyat -->
+                <VerticalStackLayout Spacing="4">
+                    <Label Text="Fiyat (₺)" FontSize="12" TextColor="#A0856A"/>
+                    <Border BackgroundColor="White" StrokeThickness="1"
+                            Stroke="#E8D5C0" StrokeShape="RoundRectangle 10"
+                            Padding="12,0">
+                        <Entry x:Name="PriceEntry"
+                               TextColor="#2C1810"
+                               BackgroundColor="Transparent"
+                               FontSize="14"
+                               Keyboard="Numeric"
+                               HeightRequest="44"/>
+                    </Border>
+                </VerticalStackLayout>
+
+                <!-- Butonlar -->
+                <Grid ColumnDefinitions="*,*" ColumnSpacing="10" Margin="0,4,0,0">
+                    <Button Grid.Column="0"
+                            Text="İptal"
+                            Clicked="OnCancelClicked"
+                            BackgroundColor="#F0E6DA"
+                            TextColor="#3D2314"
+                            CornerRadius="10"
+                            HeightRequest="44"
+                            FontSize="14"/>
+                    <Button Grid.Column="1"
+                            Text="Kaydet"
+                            Clicked="OnSaveClicked"
+                            BackgroundColor="#3D2314"
+                            TextColor="White"
+                            CornerRadius="10"
+                            HeightRequest="44"
+                            FontSize="14"
+                            FontAttributes="Bold"/>
+                </Grid>
+
+            </VerticalStackLayout>
+        </Border>
+    </Grid>
+</ContentPage>

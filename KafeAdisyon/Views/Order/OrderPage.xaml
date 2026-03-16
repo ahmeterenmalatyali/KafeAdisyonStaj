@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:KafeAdisyon.ViewModels"
+             x:Class="KafeAdisyon.Views.Order.OrderPage"
+             BackgroundColor="#FAF7F2">
+
+    <Grid RowDefinitions="Auto,*,Auto">
+
+        <!-- Header -->
+        <Border Grid.Row="0" BackgroundColor="#3D2314"
+                StrokeThickness="0" Padding="16,14">
+            <Grid ColumnDefinitions="Auto,*,Auto">
+                <Button Grid.Column="0" Text="‹ Geri"
+                        Clicked="OnBackClicked"
+                        BackgroundColor="Transparent"
+                        TextColor="#C4956A"
+                        FontSize="16" Padding="0"/>
+                <VerticalStackLayout Grid.Column="1" Margin="12,0" Spacing="1">
+                    <Label x:Name="TableNameLabel"
+                           Text="Masa"
+                           FontSize="18" FontAttributes="Bold" TextColor="White"/>
+                    <Label x:Name="StatusLabel"
+                           Text="Yükleniyor..."
+                           FontSize="11" TextColor="#C4956A"/>
+                </VerticalStackLayout>
+                <Border Grid.Column="2" BackgroundColor="#5C3317"
+                        StrokeThickness="0" StrokeShape="RoundRectangle 20" Padding="12,6">
+                    <Label x:Name="TotalLabel" Text="₺0"
+                           TextColor="#F5C896" FontSize="13" FontAttributes="Bold"/>
+                </Border>
+            </Grid>
+        </Border>
+
+        <!-- İçerik -->
+        <Grid Grid.Row="1" x:Name="ContentGrid" ColumnDefinitions="*,Auto">
+
+            <!-- Sol: Menü (sadece garson modunda görünür) -->
+            <Grid Grid.Column="0" x:Name="MenuPanel" RowDefinitions="Auto,*">
+
+                <!-- Kategori butonları (kod-behind ile doldurulur) -->
+                <ScrollView Grid.Row="0" Orientation="Horizontal"
+                            Padding="12,10" BackgroundColor="White">
+                    <HorizontalStackLayout x:Name="CategoryButtons" Spacing="10"/>
+                </ScrollView>
+
+                <!--
+                    D-1: FlexLayout + kod-behind oluşturma → CollectionView + DataTemplate
+                    Virtual scroll: sadece ekrandaki kartlar render edilir.
+                    ItemsSource = FilteredMenuItems (ViewModel property, PropertyChanged ile güncellenir)
+                    Command = AddItemCommand (ViewModel ICommand, DataTemplate Button'una bağlı)
+                    NOT: TapGestureRecognizer kullanılmadı — Button kullanıldı (Windows uyumlu)
+                -->
+                <CollectionView Grid.Row="1"
+                                x:Name="MenuCollectionView"
+                                Margin="12,10"
+                                SelectionMode="None">
+                    <CollectionView.ItemsLayout>
+                        <GridItemsLayout Orientation="Vertical"
+                                         Span="3"
+                                         HorizontalItemSpacing="10"
+                                         VerticalItemSpacing="10"/>
+                    </CollectionView.ItemsLayout>
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate x:DataType="vm:MenuItemViewModel">
+                            <Border BackgroundColor="White"
+                                    StrokeThickness="1"
+                                    Stroke="#F0E6DA"
+                                    StrokeShape="RoundRectangle 14"
+                                    HeightRequest="140"
+                                    Margin="0">
+                                <VerticalStackLayout Padding="14,12" Spacing="2">
+                                    <Label Text="{Binding Name}"
+                                           FontSize="15"
+                                           FontAttributes="Bold"
+                                           TextColor="#2C1810"
+                                           HorizontalOptions="Start"/>
+                                    <Label Text="{Binding PriceDisplay}"
+                                           FontSize="13"
+                                           TextColor="#C8702A"
+                                           HorizontalOptions="Start"/>
+                                    <Button Text="＋ Ekle"
+                                            Command="{Binding AddCommand}"
+                                            BackgroundColor="#3D2314"
+                                            TextColor="White"
+                                            CornerRadius="10"
+                                            FontSize="14"
+                                            FontAttributes="Bold"
+                                            HeightRequest="44"
+                                            HorizontalOptions="Fill"
+                                            Margin="0,8,0,0"/>
+                                </VerticalStackLayout>
+                            </Border>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+            </Grid>
+
+            <!-- Sağ: Sepet -->
+            <Grid Grid.Column="1" x:Name="OrderPanel" RowDefinitions="Auto,*"
+                  WidthRequest="320" BackgroundColor="White">
+                <Label Grid.Row="0" Text="🧾 Sipariş"
+                       FontSize="18" FontAttributes="Bold"
+                       TextColor="#3D2314" Padding="18,16,18,10"/>
+                <ScrollView Grid.Row="1" Padding="10,0">
+                    <VerticalStackLayout x:Name="OrderItemsLayout" Spacing="6"/>
+                </ScrollView>
+            </Grid>
+        </Grid>
+
+        <!-- Alt: Butonlar -->
+        <Grid Grid.Row="2" x:Name="BottomBar" ColumnDefinitions="*,*,*"
+              BackgroundColor="White" Padding="14,12">
+            <Button Grid.Column="0"
+                    x:Name="CancelOrderBtn"
+                    Text="🗑️ İptal Et"
+                    Clicked="OnCancelOrderClicked"
+                    BackgroundColor="#FFEBEE"
+                    TextColor="#E53935"
+                    BorderColor="#FFCDD2" BorderWidth="1"
+                    CornerRadius="14"
+                    FontSize="15"
+                    Margin="0,0,8,0"
+                    HeightRequest="60"/>
+            <Button Grid.Column="1"
+                    x:Name="SplitBillBtn"
+                    Text="✂️ Hesap Böl"
+                    Clicked="OnSplitBillClicked"
+                    BackgroundColor="#FFF3E0"
+                    TextColor="#C8702A"
+                    BorderColor="#F5DEC0" BorderWidth="1"
+                    CornerRadius="14"
+                    FontSize="15"
+                    Margin="0,0,8,0"
+                    HeightRequest="60"/>
+            <Button Grid.Column="2"
+                    x:Name="CloseOrderBtn"
+                    Text="✅ Hesabı Kapat"
+                    Clicked="OnCloseOrderClicked"
+                    BackgroundColor="#3D2314"
+                    TextColor="White"
+                    CornerRadius="14"
+                    FontSize="15"
+                    HeightRequest="60"/>
+        </Grid>
+
+    </Grid>
+</ContentPage>

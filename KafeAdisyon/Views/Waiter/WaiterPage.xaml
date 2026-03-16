@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<views:TablePageBase xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:views="clr-namespace:KafeAdisyon.Views"
+             x:Class="KafeAdisyon.Views.Waiter.WaiterPage"
+             BackgroundColor="#FAF7F2">
+
+    <Grid RowDefinitions="Auto,*">
+
+        <!-- Header -->
+        <Border Grid.Row="0" BackgroundColor="#3D2314"
+                StrokeThickness="0" Padding="20,14">
+            <Grid ColumnDefinitions="Auto,*,Auto,Auto">
+                <Label Grid.Column="0" Text="☕" FontSize="24" VerticalOptions="Center"/>
+                <VerticalStackLayout Grid.Column="1" Margin="12,0,0,0" Spacing="1">
+                    <Label Text="Garson Paneli" FontSize="18" FontAttributes="Bold" TextColor="#FFFFFF"/>
+                    <Label Text="KOZA KAFE" FontSize="11" TextColor="#C4956A" CharacterSpacing="2"/>
+                </VerticalStackLayout>
+                <Border Grid.Column="2" BackgroundColor="#5C3317"
+                        StrokeThickness="0" StrokeShape="RoundRectangle 20" Padding="12,6"
+                        Margin="0,0,8,0">
+                    <Label Text="🧑 Garson" TextColor="#F5C896" FontSize="12"/>
+                </Border>
+                <Button Grid.Column="3"
+                        Text="Çıkış"
+                        Clicked="OnLogoutClicked"
+                        BackgroundColor="#5C3317"
+                        TextColor="#F5C896"
+                        FontSize="12"
+                        CornerRadius="20"
+                        Padding="12,6"
+                        HeightRequest="36"
+                        BorderWidth="0"/>
+            </Grid>
+        </Border>
+
+        <ScrollView Grid.Row="1" Padding="16,12,16,20">
+            <VerticalStackLayout Spacing="12">
+
+                <HorizontalStackLayout Spacing="16" Padding="4,0">
+                    <HorizontalStackLayout Spacing="6">
+                        <BoxView Color="#4CAF50" WidthRequest="10" HeightRequest="10"
+                                 CornerRadius="5" VerticalOptions="Center"/>
+                        <Label Text="Boş" TextColor="#A0856A" FontSize="12"/>
+                    </HorizontalStackLayout>
+                    <HorizontalStackLayout Spacing="6">
+                        <BoxView Color="#E53935" WidthRequest="10" HeightRequest="10"
+                                 CornerRadius="5" VerticalOptions="Center"/>
+                        <Label Text="Dolu" TextColor="#A0856A" FontSize="12"/>
+                    </HorizontalStackLayout>
+                </HorizontalStackLayout>
+
+                <Grid ColumnDefinitions="*,*,*"
+                      RowDefinitions="Auto,Auto,Auto,Auto,Auto"
+                      ColumnSpacing="10" RowSpacing="10">
+                    <Button x:Name="BtnA1" Grid.Row="0" Grid.Column="0" Text="A-1"
+                            Clicked="OnTableClicked" CommandParameter="A-1"
+                            BackgroundColor="#E8F5E9" TextColor="#2C1810"
+                            BorderColor="#C8E6C9" BorderWidth="1.5"
+                            CornerRadius="14" HeightRequest="60" FontSize="16" FontAttributes="Bold"/>
+                    <Button x:Name="BtnA2" Grid.Row="1" Grid.Column="0" Text="A-2"
+                            Clicked="OnTableClicked" CommandParameter="A-2"
+                            BackgroundColor="#E8F5E9" TextColor="#2C1810"
+                            BorderColor="#C8E6C9" BorderWidth="1.5"
+                            CornerRadius="14" HeightRequest="60" FontSize="16" FontAttributes="Bold"/>
+                    <VerticalStackLayout Grid.Row="2" Grid.Column="0"
+                                         VerticalOptions="Center" HorizontalOptions="Center" Spacing="2">
+                        <Label Text="🚪" FontSize="20" HorizontalOptions="Center"/>
+                        <Label Text="Giriş" TextColor="#C8702A" FontSize="11"
+                               CharacterSpacing="1" HorizontalOptions="Center"/>
+                    </VerticalStackLayout>
+                    <Button x:Name="BtnA3" Grid.Row="3" Grid.Column="0" Text="A-3"
+                            Clicked="OnTableClicked" CommandParameter="A-3"
+                            BackgroundColor="#E8F5E9" TextColor="#2C1810"
+                            BorderColor="#C8E6C9" BorderWidth="1.5"
+                            CornerRadius="14" HeightRequest="60" FontSize="16" FontAttributes="Bold"/>
+                    <Button x:Name="BtnA4" Grid.Row="4" Grid.Column="0" Text="A-4"
+                            Clicked="OnTableClicked" CommandParameter="A-4"
+                            BackgroundColor="#E8F5E9" TextColor="#2C1810"
+                            BorderColor="#C8E6C9" BorderWidth="1.5"
+                            CornerRadius="14" HeightRequest="60" FontSize="16" FontAttributes="Bold"/>
+                    <Button x:Name="BtnB1" Grid.Row="0" Grid.Column="1" Text="B-1"
+                            Clicked="OnTableClicked" CommandParameter="B-1"
+                            BackgroundColor="#E8F5E9" TextColor="#2C1810"
+                            BorderColor="#C8E6C9" BorderWidth="1.5"
+                            CornerRadius="14" HeightRequest="60" FontSize="16" FontAttributes="Bold"/>
+                    <Button x:Name="BtnB2" Grid.Row="1" Grid.Column="1" Text="B-2"
+                            Clicked="OnTableClicked" CommandParameter="B-2"
+                            BackgroundColor="#E8F5E9" TextColor="#2C1810"
+                            BorderColor="#C8E6C9" BorderWidth="1.5"
+                            CornerRadius="14" HeightRequest="60" FontSize="16" FontAttributes="Bold"/>
+                    <Button x:Name="BtnB3" Grid.Row="2" Grid.Column="1" Text="B-3"
+                            Clicked="OnTableClicked" CommandParameter="B-3"
+                            BackgroundColor="#E8F5E9" TextColor="#2C1810"
+                            BorderColor="#C8E6C9" BorderWidth="1.5"
+                            CornerRadius="14" HeightRequest="60" FontSize="16" FontAttributes="Bold"/>
+                    <Button x:Name="BtnB4" Grid.Row="3" Grid.Column="1" Text="B-4"
+                            Clicked="OnTableClicked" CommandParameter="B-4"
+                            BackgroundColor="#E8F5E9" TextColor="#2C1810"
+                            BorderColor="#C8E6C9" BorderWidth="1.5"
+                            CornerRadius="14" HeightRequest="60" FontSize="16" FontAttributes="Bold"/>
+                    <Button x:Name="BtnB5" Grid.Row="4" Grid.Column="1" Text="B-5"
+                            Clicked="OnTableClicked" CommandParameter="B-5"
+                            BackgroundColor="#E8F5E9" TextColor="#2C1810"
+                            BorderColor="#C8E6C9" BorderWidth="1.5"
+                            CornerRadius="14" HeightRequest="60" FontSize="16" FontAttributes="Bold"/>
+                    <Button x:Name="BtnC1" Grid.Row="0" Grid.Column="2" Text="C-1"
+                            Clicked="OnTableClicked" CommandParameter="C-1"
+                            BackgroundColor="#E8F5E9" TextColor="#2C1810"
+                            BorderColor="#C8E6C9" BorderWidth="1.5"
+                            CornerRadius="14" HeightRequest="60" FontSize="16" FontAttributes="Bold"/>
+                    <Button x:Name="BtnC2" Grid.Row="1" Grid.Column="2" Text="C-2"
+                            Clicked="OnTableClicked" CommandParameter="C-2"
+                            BackgroundColor="#E8F5E9" TextColor="#2C1810"
+                            BorderColor="#C8E6C9" BorderWidth="1.5"
+                            CornerRadius="14" HeightRequest="60" FontSize="16" FontAttributes="Bold"/>
+                    <Button x:Name="BtnC3" Grid.Row="2" Grid.Column="2" Text="C-3"
+                            Clicked="OnTableClicked" CommandParameter="C-3"
+                            BackgroundColor="#E8F5E9" TextColor="#2C1810"
+                            BorderColor="#C8E6C9" BorderWidth="1.5"
+                            CornerRadius="14" HeightRequest="60" FontSize="16" FontAttributes="Bold"/>
+                    <Button x:Name="BtnC4" Grid.Row="3" Grid.Column="2" Text="C-4"
+                            Clicked="OnTableClicked" CommandParameter="C-4"
+                            BackgroundColor="#E8F5E9" TextColor="#2C1810"
+                            BorderColor="#C8E6C9" BorderWidth="1.5"
+                            CornerRadius="14" HeightRequest="60" FontSize="16" FontAttributes="Bold"/>
+                    <Button x:Name="BtnC5" Grid.Row="4" Grid.Column="2" Text="C-5"
+                            Clicked="OnTableClicked" CommandParameter="C-5"
+                            BackgroundColor="#E8F5E9" TextColor="#2C1810"
+                            BorderColor="#C8E6C9" BorderWidth="1.5"
+                            CornerRadius="14" HeightRequest="60" FontSize="16" FontAttributes="Bold"/>
+                </Grid>
+
+            </VerticalStackLayout>
+        </ScrollView>
+
+    </Grid>
+</views:TablePageBase>
