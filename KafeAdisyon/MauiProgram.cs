@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using System.Reflection;
 using KafeAdisyon.Application.Interfaces;
 using KafeAdisyon.Infrastructure.Client;
+using KafeAdisyon.Infrastructure.Offline;
 using KafeAdisyon.Infrastructure.Services;
 using KafeAdisyon.ViewModels;
 using KafeAdisyon.Views;
@@ -45,18 +46,30 @@ public static class MauiProgram
                 builder.Configuration.AddJsonStream(stream);
         }
 
-        // Infrastructure
+        // ─── Infrastructure ──────────────────────────────────────────────────
         builder.Services.AddSingleton<DatabaseClient>();
 
-        // Services — MAUI'de Scoped root container'dan resolve edilemez, Transient kullan
+        // Offline altyapı — Singleton (uygulama boyunca tek örnek)
+        builder.Services.AddSingleton<IConnectivityService, ConnectivityService>();
+        builder.Services.AddSingleton<OfflineQueue>();
+
+        // ─── Services ────────────────────────────────────────────────────────
+        // MAUI'de Scoped root container'dan resolve edilemez → Transient kullan
+
         builder.Services.AddTransient<ITableService, TableService>();
         builder.Services.AddTransient<IMenuService, MenuService>();
-        builder.Services.AddTransient<IOrderService, OrderService>();
 
-        // ViewModels
+        // Asıl OrderService somut tip olarak da kaydedilmeli —
+        // OfflineAwareOrderService constructor'ı OrderService'i direkt enjekte eder
+        builder.Services.AddTransient<OrderService>();
+
+        // IOrderService isteklerini OfflineAwareOrderService karşılar
+        builder.Services.AddTransient<IOrderService, OfflineAwareOrderService>();
+
+        // ─── ViewModels ──────────────────────────────────────────────────────
         builder.Services.AddSingleton<AdminViewModel>();
 
-        // Views
+        // ─── Views ───────────────────────────────────────────────────────────
         builder.Services.AddTransient<LoginPage>();
         builder.Services.AddTransient<AdminPage>();
         builder.Services.AddTransient<WaiterPage>();

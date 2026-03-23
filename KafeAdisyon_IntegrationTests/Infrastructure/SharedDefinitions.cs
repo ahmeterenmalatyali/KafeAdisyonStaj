@@ -105,4 +105,10 @@ namespace KafeAdisyon.Application.Interfaces
         Task<BaseResponse<object>> UpdateOrderItemQuantityAsync(UpdateOrderItemQuantityRequest request);
         Task<BaseResponse<object>> RemoveOrderItemAsync(string itemId);
     }
+
+    public interface IConnectivityService
+    {
+        bool IsConnected { get; }
+        event EventHandler<bool>? ConnectivityChanged;
+    }
 }
