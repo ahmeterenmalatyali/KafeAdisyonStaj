@@ -27,6 +27,12 @@ namespace KafeAdisyon.IntegrationTests.Infrastructure
             _isConnected = value;
             ConnectivityChanged?.Invoke(this, value);
         }
+
+        /// <summary>
+        /// ConnectivityChanged eventini tetiklemeden sadece IsConnected değerini değiştirir.
+        /// Manuel flush testlerinde kullanılır: event handler flush lock'u kapmasın.
+        /// </summary>
+        public void SetConnectedSilently(bool value) => _isConnected = value;
     }
 
     // ─── InMemoryOfflineQueue ─────────────────────────────────────────────────
@@ -60,9 +66,9 @@ namespace KafeAdisyon.IntegrationTests.Infrastructure
             try
             {
                 _items.Add(new QueueItem(
-                    Id:        Guid.NewGuid().ToString(),
+                    Id: Guid.NewGuid().ToString(),
                     Operation: operation,
-                    Payload:   JsonSerializer.Serialize(payload),
+                    Payload: JsonSerializer.Serialize(payload),
                     CreatedAt: DateTime.UtcNow
                 ));
             }
@@ -116,11 +122,11 @@ namespace KafeAdisyon.IntegrationTests.Infrastructure
         private readonly InMemoryOfflineQueue _queue;
         private readonly SemaphoreSlim _flushLock = new(1, 1);
 
-        private const string OpCreateOrder    = "CreateOrder";
-        private const string OpCloseOrder     = "CloseOrder";
-        private const string OpAddItem        = "AddItem";
+        private const string OpCreateOrder = "CreateOrder";
+        private const string OpCloseOrder = "CloseOrder";
+        private const string OpAddItem = "AddItem";
         private const string OpUpdateQuantity = "UpdateQuantity";
-        private const string OpRemoveItem     = "RemoveItem";
+        private const string OpRemoveItem = "RemoveItem";
 
         public TestableOfflineAwareOrderService(
             IOrderService inner,
@@ -128,7 +134,7 @@ namespace KafeAdisyon.IntegrationTests.Infrastructure
             InMemoryOfflineQueue queue)
         {
             _inner = inner;
-            _conn  = connectivity;
+            _conn = connectivity;
             _queue = queue;
 
             _conn.ConnectivityChanged += async (_, isConnected) =>
@@ -150,7 +156,10 @@ namespace KafeAdisyon.IntegrationTests.Infrastructure
             await _queue.EnqueueAsync(OpCreateOrder, tableId);
             return BaseResponse<OrderModel>.SuccessResult(new OrderModel
             {
-                Id = $"_offline_{Guid.NewGuid()}", TableId = tableId, Status = "aktif", Total = 0
+                Id = $"_offline_{Guid.NewGuid()}",
+                TableId = tableId,
+                Status = "aktif",
+                Total = 0
             }, "[Offline] Geçici sipariş");
         }
 
@@ -167,8 +176,11 @@ namespace KafeAdisyon.IntegrationTests.Infrastructure
             await _queue.EnqueueAsync(OpAddItem, request);
             return BaseResponse<OrderItemModel>.SuccessResult(new OrderItemModel
             {
-                Id = $"_offline_{Guid.NewGuid()}", OrderId = request.OrderId,
-                MenuItemId = request.MenuItemId, Quantity = request.Quantity, Price = request.Price
+                Id = $"_offline_{Guid.NewGuid()}",
+                OrderId = request.OrderId,
+                MenuItemId = request.MenuItemId,
+                Quantity = request.Quantity,
+                Price = request.Price
             }, "[Offline] Geçici kalem");
         }
 

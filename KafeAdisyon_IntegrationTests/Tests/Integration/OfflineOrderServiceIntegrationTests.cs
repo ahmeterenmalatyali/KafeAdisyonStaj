@@ -30,9 +30,9 @@ namespace KafeAdisyon.IntegrationTests.Tests.Integration
                  InMemoryOfflineQueue queue)
             BuildOfflineService(bool startConnected = false)
         {
-            var conn  = new FakeConnectivityService(startConnected);
+            var conn = new FakeConnectivityService(startConnected);
             var queue = new InMemoryOfflineQueue();
-            var svc   = new TestableOfflineAwareOrderService(_fx.OrderService, conn, queue);
+            var svc = new TestableOfflineAwareOrderService(_fx.OrderService, conn, queue);
             return (svc, conn, queue);
         }
 
@@ -57,7 +57,7 @@ namespace KafeAdisyon.IntegrationTests.Tests.Integration
         [Fact(DisplayName = "DB | Offline: Bağlantı yokken AddOrderItem kuyruğa alınır, DB'ye yazılmaz")]
         public async Task Offline_AddItem_GoesToQueue_NotToDatabase()
         {
-            var table    = await GetAnyTable();
+            var table = await GetAnyTable();
             var menuItem = await GetAnyMenuItem();
             var (svc, _, queue) = BuildOfflineService(startConnected: false);
 
@@ -70,10 +70,10 @@ namespace KafeAdisyon.IntegrationTests.Tests.Integration
             // Offline servis ile kalem ekle
             var addResp = await svc.AddOrderItemAsync(new AddOrderItemRequest
             {
-                OrderId    = order.Id,
+                OrderId = order.Id,
                 MenuItemId = menuItem.Id,
-                Quantity   = 3,
-                Price      = menuItem.Price
+                Quantity = 3,
+                Price = menuItem.Price
             });
 
             // Yanıt optimistic — başarılı ama _offline_ prefixli
@@ -94,7 +94,7 @@ namespace KafeAdisyon.IntegrationTests.Tests.Integration
         [Fact(DisplayName = "DB | Offline: Bağlantı gelince kuyruk flush edilir, kalem Supabase'de oluşur")]
         public async Task Offline_AddItem_ThenFlush_ItemCreatedInDatabase()
         {
-            var table    = await GetAnyTable();
+            var table = await GetAnyTable();
             var menuItem = await GetAnyMenuItem();
             var (svc, conn, queue) = BuildOfflineService(startConnected: false);
 
@@ -105,17 +105,17 @@ namespace KafeAdisyon.IntegrationTests.Tests.Integration
             // Offline: ürün ekle
             await svc.AddOrderItemAsync(new AddOrderItemRequest
             {
-                OrderId    = order.Id,
+                OrderId = order.Id,
                 MenuItemId = menuItem.Id,
-                Quantity   = 2,
-                Price      = menuItem.Price
+                Quantity = 2,
+                Price = menuItem.Price
             });
 
             (await queue.CountAsync()).Should().Be(1, "flush öncesi kuyrukta bekleniyor");
 
             // Bağlantıyı getir → flush tetiklenir
             conn.SetConnected(true);
-            await Task.Delay(300); // async event handler için bekleme
+            await Task.Delay(1500); // Supabase çağrısı ~400ms, yeterli marj bırakılıyor
 
             // Kuyruk temizlendi
             (await queue.CountAsync()).Should().Be(0, "başarılı flush sonrası kuyruk boş olmalı");
@@ -131,14 +131,14 @@ namespace KafeAdisyon.IntegrationTests.Tests.Integration
         [Fact(DisplayName = "DB | Offline: Tam akış — offline sipariş aç, ürün ekle, flush, kapat")]
         public async Task Offline_FullFlow_CreateAddFlushClose_AllPersistedToDatabase()
         {
-            var table    = await GetAnyTable();
+            var table = await GetAnyTable();
             var menuItem = await GetAnyMenuItem();
 
             // Önce mevcut aktif siparişi temizle
             var existing = await _fx.OrderService.GetActiveOrderByTableAsync(table.Id);
             if (existing.Data != null)
                 await _fx.OrderService.CloseOrderAsync(new CloseOrderRequest
-                    { OrderId = existing.Data.Id, TableId = table.Id, FinalTotal = 0 });
+                { OrderId = existing.Data.Id, TableId = table.Id, FinalTotal = 0 });
 
             var (svc, conn, queue) = BuildOfflineService(startConnected: false);
 
@@ -153,19 +153,19 @@ namespace KafeAdisyon.IntegrationTests.Tests.Integration
             // Offline servis ile ürün 1 ekle
             await svc.AddOrderItemAsync(new AddOrderItemRequest
             {
-                OrderId    = order.Id,
+                OrderId = order.Id,
                 MenuItemId = menuItem.Id,
-                Quantity   = 2,
-                Price      = menuItem.Price
+                Quantity = 2,
+                Price = menuItem.Price
             });
 
             // Offline servis ile ürün 2 ekle (aynı ürün, farklı satır olarak)
             await svc.AddOrderItemAsync(new AddOrderItemRequest
             {
-                OrderId    = order.Id,
+                OrderId = order.Id,
                 MenuItemId = menuItem.Id,
-                Quantity   = 1,
-                Price      = menuItem.Price
+                Quantity = 1,
+                Price = menuItem.Price
             });
 
             (await queue.CountAsync()).Should().Be(2, "2 offline işlem bekliyor");
@@ -176,7 +176,7 @@ namespace KafeAdisyon.IntegrationTests.Tests.Integration
             // ─── Faz 2: Bağlantı geldi → flush ───────────────────────────────
 
             conn.SetConnected(true);
-            await Task.Delay(500); // flush async çalışıyor
+            await Task.Delay(1500); // flush async çalışıyor, Supabase ~400ms × 2 işlem
 
             (await queue.CountAsync()).Should().Be(0);
 
@@ -194,8 +194,8 @@ namespace KafeAdisyon.IntegrationTests.Tests.Integration
             // Siparişi kapat
             var closeResp = await _fx.OrderService.CloseOrderAsync(new CloseOrderRequest
             {
-                OrderId    = order.Id,
-                TableId    = table.Id,
+                OrderId = order.Id,
+                TableId = table.Id,
                 FinalTotal = expectedTotal
             });
             closeResp.Success.Should().BeTrue(closeResp.Message);
@@ -204,7 +204,7 @@ namespace KafeAdisyon.IntegrationTests.Tests.Integration
         [Fact(DisplayName = "DB | Offline: Manuel FlushQueueAsync çağrısı event gelmese de çalışır")]
         public async Task Offline_ManualFlush_WorksWithoutConnectivityEvent()
         {
-            var table    = await GetAnyTable();
+            var table = await GetAnyTable();
             var menuItem = await GetAnyMenuItem();
             var (svc, conn, queue) = BuildOfflineService(startConnected: false);
 
@@ -213,14 +213,18 @@ namespace KafeAdisyon.IntegrationTests.Tests.Integration
 
             await svc.AddOrderItemAsync(new AddOrderItemRequest
             {
-                OrderId    = order.Id,
+                OrderId = order.Id,
                 MenuItemId = menuItem.Id,
-                Quantity   = 1,
-                Price      = menuItem.Price
+                Quantity = 1,
+                Price = menuItem.Price
             });
 
             // Event olmadan bağlantıyı açık yap ve manuel flush
-            conn.SetConnected(true);
+            // NOT: SetConnected(true) yerine SetConnectedSilently kullanılıyor.
+            // SetConnected event'i tetikler → async handler FlushQueueAsync lock'u alır →
+            // hemen arkasındaki manuel FlushQueueAsync çağrısı WaitAsync(0) ile lock'u
+            // alamaz ve boş döner. SetConnectedSilently ile bu yarış koşulu ortadan kalkar.
+            conn.SetConnectedSilently(true);
             await svc.FlushQueueAsync();
 
             (await queue.CountAsync()).Should().Be(0);
@@ -232,20 +236,20 @@ namespace KafeAdisyon.IntegrationTests.Tests.Integration
         [Fact(DisplayName = "DB | Offline: Flush sırasında bağlantı kesilirse kalan öğeler kuyrukta kalır")]
         public async Task Offline_FlushDropsConnection_RemainingItemsStayInQueue()
         {
-            var table    = await GetAnyTable();
+            var table = await GetAnyTable();
             var menuItem = await GetAnyMenuItem();
 
             // Gerçek order aç
             var order = (await _fx.OrderService.CreateOrderAsync(table.Id)).Data!;
             _fx.TrackOrder(order.Id);
 
-            var conn  = new FakeConnectivityService(true);
+            var conn = new FakeConnectivityService(true);
             var queue = new InMemoryOfflineQueue();
 
             // 3 öğeyi doğrudan kuyruğa yaz
             for (int i = 0; i < 3; i++)
                 await queue.EnqueueAsync("AddItem", new AddOrderItemRequest
-                    { OrderId = order.Id, MenuItemId = menuItem.Id, Quantity = 1, Price = menuItem.Price });
+                { OrderId = order.Id, MenuItemId = menuItem.Id, Quantity = 1, Price = menuItem.Price });
 
             var processedCount = 0;
 

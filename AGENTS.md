@@ -117,16 +117,71 @@ await _vm.ReloadOrderItemsAsync();
 
 ---
 
+## Offline Kuyruk
+
+`OfflineAwareOrderService` bir Decorator'dır — `IOrderService`'i sararak bağlantı kontrolü ekler:
+
+```
+Bağlantı VAR  → isteği doğrudan OrderService'e iletir
+Bağlantı YOK  → işlemi OfflineQueue'ya kaydeder, optimistic yanıt döner
+Bağlantı gelince → ConnectivityChanged eventi → FlushQueueAsync() otomatik tetiklenir
+```
+
+**`FlushQueueAsync` içinde lock var (`SemaphoreSlim(1,1)`).**  
+`SetConnected(true)` hem event'i hem de lock'u tetikler. Hemen arkasından manuel `FlushQueueAsync()` çağırırsan `WaitAsync(0)` lock'u alamaz ve boş döner.  
+Bunu önlemek için `FakeConnectivityService.SetConnectedSilently(bool)` kullan:
+
+```csharp
+// TEST — YANLIŞ: event → async handler lock'u alır → manuel çağrı boş döner
+conn.SetConnected(true);
+await svc.FlushQueueAsync(); // WaitAsync(0) başarısız, hiçbir şey yapmaz
+
+// TEST — DOĞRU: event tetiklenmez, lock serbest kalır
+conn.SetConnectedSilently(true);
+await svc.FlushQueueAsync(); // lock alınır, flush çalışır
+```
+
+---
+
+## Offline Test Delay Değerleri
+
+Supabase yanıt süresi ~400ms (perf testlerinde ölçüldü).  
+Flush async arka planda çalıştığı için `Task.Delay` yeterince uzun olmalı:
+
+```csharp
+conn.SetConnected(true);
+await Task.Delay(1500); // tek işlem için yeterli; 2 işlem varsa da güvenli marj
+```
+
+300ms veya 500ms delay ile flush tamamlanmadan kontrol yapılır → test yanlış başarısız olur.
+
+---
+
+## Integration Test — Stale Sipariş Temizleme
+
+`GetAnyTable()` hep aynı tabloyu (`.First()`) seçer. Önceki test çalışması cleanup yapmadan biterse o tabloda "aktif" bir sipariş kalabilir. Her integration testinin başında şunu ekle:
+
+```csharp
+var stale = await _fx.OrderService.GetActiveOrderByTableAsync(table.Id);
+if (stale.Data != null)
+    await _fx.OrderService.CloseOrderAsync(new CloseOrderRequest
+        { OrderId = stale.Data.Id, TableId = table.Id, FinalTotal = 0 });
+```
+
+---
+
 ## Klasör Yapısı
 
 ```
 KafeAdisyon/
 ├── Application/
-│   ├── Interfaces/          → IMenuService, IOrderService, ITableService
+│   ├── Interfaces/          → IMenuService, IOrderService, ITableService, IConnectivityService
 │   └── DTOs/RequestModels/
 ├── Infrastructure/
 │   ├── Client/              → DatabaseClient.cs
-│   └── Services/            → MenuService, OrderService, TableService
+│   ├── Offline/             → OfflineQueue.cs
+│   └── Services/            → MenuService, OrderService, TableService,
+│                               ConnectivityService, OfflineAwareOrderService
 ├── ViewModels/              → AdminViewModel, OrderViewModel
 ├── Views/
 │   ├── LoginPage.xaml
@@ -137,9 +192,11 @@ KafeAdisyon/
 └── Common/                  → BaseResponse<T>
 ```
 
-
+---
 
 ## Derleme Hatası Alınca Bakılacaklar
 
 - Model namespace'i `Postgrest.Attributes` / `Postgrest.Models` olmalı — `Supabase.Postgrest` yazınca derleme hatası veriyor.
 - Visual Studio bazen otomatik `using Android...` ekliyor, Windows build'ini kırıyor — build hatasında ilk bakılan yer.
+- Integration test projesinin `SharedDefinitions.cs` dosyasına yeni interface eklenince `IConnectivityService` de dahil olmak üzere `KafeAdisyon.Application.Interfaces` namespace'indeki tüm interface'lerin orada tanımlı olduğunu kontrol et (ana proje referans verilmiyor, elle kopyalanıyor).
+- Build sırasında `dotnet_bot.png` dosya kilidi hatası alınırsa: VS'yi kapat, `obj/` ve `bin/` klasörlerini sil, yeniden aç.

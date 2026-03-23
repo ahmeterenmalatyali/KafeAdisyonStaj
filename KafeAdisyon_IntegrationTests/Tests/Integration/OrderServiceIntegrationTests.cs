@@ -36,6 +36,15 @@ namespace KafeAdisyon.IntegrationTests.Tests.Integration
             var table = await GetAnyTable();
             var menuItem = await GetAnyMenuItem();
 
+            // 0. Tabloda önceki çalışmadan kalan aktif sipariş varsa temizle
+            //    GetAnyTable() her seferinde aynı tabloyu (.First()) seçer;
+            //    önceki test çalışması cleanup yapmadan bitmişse sahte bir aktif
+            //    sipariş kalıyor ve testin sonundaki kontrol yanıltıcı sonuç veriyor.
+            var staleOrder = await _fx.OrderService.GetActiveOrderByTableAsync(table.Id);
+            if (staleOrder.Data != null)
+                await _fx.OrderService.CloseOrderAsync(new CloseOrderRequest
+                { OrderId = staleOrder.Data.Id, TableId = table.Id, FinalTotal = 0 });
+
             // 1. Siparişi aç
             var createResp = await _fx.OrderService.CreateOrderAsync(table.Id);
             createResp.Success.Should().BeTrue(createResp.Message);
@@ -103,7 +112,7 @@ namespace KafeAdisyon.IntegrationTests.Tests.Integration
             if (existing.Data != null)
             {
                 await _fx.OrderService.CloseOrderAsync(new CloseOrderRequest
-                    { OrderId = existing.Data.Id, TableId = table.Id, FinalTotal = 0 });
+                { OrderId = existing.Data.Id, TableId = table.Id, FinalTotal = 0 });
             }
 
             var createResp = await _fx.OrderService.CreateOrderAsync(table.Id);
@@ -130,7 +139,7 @@ namespace KafeAdisyon.IntegrationTests.Tests.Integration
             var existing = await _fx.OrderService.GetActiveOrderByTableAsync(table.Id);
             if (existing.Data != null)
                 await _fx.OrderService.CloseOrderAsync(new CloseOrderRequest
-                    { OrderId = existing.Data.Id, TableId = table.Id, FinalTotal = 0 });
+                { OrderId = existing.Data.Id, TableId = table.Id, FinalTotal = 0 });
 
             var createResp = await _fx.OrderService.CreateOrderAsync(table.Id);
             createResp.Success.Should().BeTrue(createResp.Message);
@@ -139,11 +148,11 @@ namespace KafeAdisyon.IntegrationTests.Tests.Integration
 
             // Item1: 3 adet
             await _fx.OrderService.AddOrderItemAsync(new AddOrderItemRequest
-                { OrderId = order.Id, MenuItemId = item1.Id, Quantity = 3, Price = item1.Price });
+            { OrderId = order.Id, MenuItemId = item1.Id, Quantity = 3, Price = item1.Price });
 
             // Item2: 2 adet
             await _fx.OrderService.AddOrderItemAsync(new AddOrderItemRequest
-                { OrderId = order.Id, MenuItemId = item2.Id, Quantity = 2, Price = item2.Price });
+            { OrderId = order.Id, MenuItemId = item2.Id, Quantity = 2, Price = item2.Price });
 
             var itemsResp = await _fx.OrderService.GetOrderItemsAsync(order.Id);
             itemsResp.Success.Should().BeTrue(itemsResp.Message);
@@ -165,13 +174,13 @@ namespace KafeAdisyon.IntegrationTests.Tests.Integration
             var existing = await _fx.OrderService.GetActiveOrderByTableAsync(table.Id);
             if (existing.Data != null)
                 await _fx.OrderService.CloseOrderAsync(new CloseOrderRequest
-                    { OrderId = existing.Data.Id, TableId = table.Id, FinalTotal = 0 });
+                { OrderId = existing.Data.Id, TableId = table.Id, FinalTotal = 0 });
 
             var order = (await _fx.OrderService.CreateOrderAsync(table.Id)).Data!;
             _fx.TrackOrder(order.Id);
 
             var addedItem = (await _fx.OrderService.AddOrderItemAsync(new AddOrderItemRequest
-                { OrderId = order.Id, MenuItemId = menuItem.Id, Quantity = 1, Price = menuItem.Price })).Data!;
+            { OrderId = order.Id, MenuItemId = menuItem.Id, Quantity = 1, Price = menuItem.Price })).Data!;
 
             // Adedi 4'e çıkar
             var updateResp = await _fx.OrderService.UpdateOrderItemQuantityAsync(
@@ -194,13 +203,13 @@ namespace KafeAdisyon.IntegrationTests.Tests.Integration
             var existing = await _fx.OrderService.GetActiveOrderByTableAsync(table.Id);
             if (existing.Data != null)
                 await _fx.OrderService.CloseOrderAsync(new CloseOrderRequest
-                    { OrderId = existing.Data.Id, TableId = table.Id, FinalTotal = 0 });
+                { OrderId = existing.Data.Id, TableId = table.Id, FinalTotal = 0 });
 
             var order = (await _fx.OrderService.CreateOrderAsync(table.Id)).Data!;
             _fx.TrackOrder(order.Id);
 
             var addedItem = (await _fx.OrderService.AddOrderItemAsync(new AddOrderItemRequest
-                { OrderId = order.Id, MenuItemId = menuItem.Id, Quantity = 2, Price = menuItem.Price })).Data!;
+            { OrderId = order.Id, MenuItemId = menuItem.Id, Quantity = 2, Price = menuItem.Price })).Data!;
 
             var removeResp = await _fx.OrderService.RemoveOrderItemAsync(addedItem.Id);
             removeResp.Success.Should().BeTrue(removeResp.Message);
@@ -219,18 +228,18 @@ namespace KafeAdisyon.IntegrationTests.Tests.Integration
             var existing = await _fx.OrderService.GetActiveOrderByTableAsync(table.Id);
             if (existing.Data != null)
                 await _fx.OrderService.CloseOrderAsync(new CloseOrderRequest
-                    { OrderId = existing.Data.Id, TableId = table.Id, FinalTotal = 0 });
+                { OrderId = existing.Data.Id, TableId = table.Id, FinalTotal = 0 });
 
             var order = (await _fx.OrderService.CreateOrderAsync(table.Id)).Data!;
             _fx.TrackOrder(order.Id);
 
             await _fx.OrderService.AddOrderItemAsync(new AddOrderItemRequest
-                { OrderId = order.Id, MenuItemId = menuItem.Id, Quantity = 3, Price = menuItem.Price });
+            { OrderId = order.Id, MenuItemId = menuItem.Id, Quantity = 3, Price = menuItem.Price });
 
             double finalTotal = menuItem.Price * 3;
 
             await _fx.OrderService.CloseOrderAsync(new CloseOrderRequest
-                { OrderId = order.Id, TableId = table.Id, FinalTotal = finalTotal });
+            { OrderId = order.Id, TableId = table.Id, FinalTotal = finalTotal });
 
             // DB'den siparişi oku — total ve status kontrol
             var orders = await _fx.Client.Db
