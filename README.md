@@ -24,6 +24,7 @@ Garsonlar masaları anlık takip edebilir, sipariş açıp kapatabilir; admin is
 - Ürün ekleme / çıkarma işlemlerinde **optimistik UI** — veritabanı yanıtı beklenmeden ekran güncellenir
 - Sipariş kalemi sıfırlandığında siparişin ve masa durumunun otomatik kapanması
 - **Hesap paylaşımı (Split Bill):** Aynı masadaki birden fazla kişi ürünleri bölerek ayrı ayrı ödeyebilir
+- **Offline destek** — internet kesildiğinde işlemler yerel kuyruğa alınır, bağlantı gelince otomatik olarak Supabase'e gönderilir
 
 ### 🔧 Admin
 - Menü ürünü ekleme, düzenleme, soft-delete (pasife alma)
@@ -42,11 +43,13 @@ Garsonlar masaları anlık takip edebilir, sipariş açıp kapatabilir; admin is
 ```
 KafeAdisyon/
 ├── Application/
-│   ├── Interfaces/          # IMenuService · IOrderService · ITableService
+│   ├── Interfaces/          # IMenuService · IOrderService · ITableService · IConnectivityService
 │   └── DTOs/RequestModels/  # Tip güvenli istek modelleri
 ├── Infrastructure/
 │   ├── Client/              # DatabaseClient — Supabase/Postgrest bağlantısı
+│   ├── Offline/             # OfflineQueue — kalıcı işlem kuyruğu
 │   └── Services/            # MenuService · OrderService · TableService
+│                            # ConnectivityService · OfflineAwareOrderService
 ├── ViewModels/              # MVVM — CommunityToolkit.Mvvm (ObservableProperty)
 ├── Views/                   # XAML sayfaları (Login · Waiter · Order · Admin)
 ├── Models/                  # Tablo eşleme modelleri
@@ -70,7 +73,7 @@ Mimari, staj yerindeki backend projesinin katmanlı yapısından öğrenilerek u
 | ORM | supabase-csharp 0.16.2 |
 | Yapılandırma | Microsoft.Extensions.Configuration.Json |
 | Test | xUnit — Unit & Integration |
-| Platform | Android · iOS · macOS · Windows |
+| Platform | Android · Windows |
 
 ---
 
@@ -159,9 +162,14 @@ dotnet test KafeAdisyon_IntegrationTests/
 | `OrderViewModelTests` | Sipariş oluşturma, ürün ekleme/çıkarma |
 | `SplitBillCalculatorTests` | Hesap bölme hesaplamaları |
 | `BaseResponseTests` | Ortak yanıt modeli |
+| `OfflineQueueTests` | Kuyruk CRUD, serileştirme, eşzamanlılık |
+| `OfflineAwareOrderServiceTests` | Online/offline yönlendirme, flush mantığı, lock koruması |
 | `MenuServiceIntegrationTests` | Menü CRUD — Supabase |
 | `OrderServiceIntegrationTests` | Sipariş akışı — Supabase |
+| `OfflineOrderServiceIntegrationTests` | Offline kuyruk → flush → Supabase doğrulama |
 | `PerformanceTests` | Servis yanıt süresi eşikleri |
+
+**Sonuç:** Unit 78/78 · Integration 33/33 — tüm testler geçiyor.
 
 ---
 
@@ -174,6 +182,8 @@ dotnet test KafeAdisyon_IntegrationTests/
 **Soft delete:** Menü ürünleri veritabanından silinmez; `is_active = false` olarak işaretlenir. Geçmiş siparişlerin bütünlüğü korunur.
 
 **Split Bill:** `SplitBillPage` bir `TaskCompletionSource` üzerinden çalışır; modal kapatıldığında `PaidQuantities` sözlüğünü caller sayfaya geri döndürür, `OrderPage` kalan ürünleri doğrudan günceller.
+
+**Offline destek:** `OfflineAwareOrderService`, Decorator Pattern ile `IOrderService` üstüne oturur. Bağlantı yokken yazma işlemleri MAUI `Preferences` tabanlı `OfflineQueue`'ya kaydedilir; kullanıcı arayüzüne `_offline_` önekli geçici ID ile anlık başarılı yanıt döndürülür. `ConnectivityChanged` eventi tetiklendiğinde `FlushQueueAsync` devreye girerek kuyruktaki işlemleri sırayla Supabase'e gönderir. Eş zamanlı flush çakışmalarını önlemek için `SemaphoreSlim(1,1)` kilidi kullanılır.
 
 ---
 
