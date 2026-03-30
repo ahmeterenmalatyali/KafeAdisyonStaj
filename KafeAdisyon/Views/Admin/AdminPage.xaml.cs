@@ -1,3 +1,4 @@
+using KafeAdisyon.Application.Interfaces;
 using KafeAdisyon.Models;
 using KafeAdisyon.ViewModels;
 using KafeAdisyon.Views.Order;
@@ -12,11 +13,25 @@ public partial class AdminPage : TablePageBase
     // F-07: Menü listesi dirty flag — tab geçişinde gereksiz rebuild önlenir
     private bool _menuListDirty = true;
 
-    public AdminPage(AdminViewModel vm) : base(vm)
+    // Rapor sekmesi için tarih aralığı ve son URL
+    private DateTime _reportFrom;
+    private DateTime _reportTo;
+    private string? _lastReportUrl;
+
+    private readonly ISalesReportService _reportService;
+
+    public AdminPage(AdminViewModel vm, ISalesReportService reportService) : base(vm)
     {
         InitializeComponent();
         BindingContext = vm;
+        _reportService = reportService;
+
+        // Rapor sekmesi varsayılanı: bugün
+        SelectReportToday();
+        EntryReportTitle.Text = $"{DateTime.Now:dd MMMM yyyy} Satış Raporu";
     }
+
+    // ── MASALAR ───────────────────────────────────────
 
     private async void OnTableClicked(object sender, EventArgs e)
     {
@@ -68,7 +83,6 @@ public partial class AdminPage : TablePageBase
                 var btn = new Button
                 {
                     Text = cat,
-                    // F-03: AppColors statik cache
                     BorderColor = AppColors.CategoryBorder,
                     BorderWidth = 1,
                     CornerRadius = 20,
@@ -81,7 +95,7 @@ public partial class AdminPage : TablePageBase
                     Vm.FilterByCategory(cat);
                     UpdateMenuCategoryButtonColors();
                     BuildMenuList();
-                    _menuListDirty = false; // yeni build yapıldı
+                    _menuListDirty = false;
                 };
                 _menuCategoryBtnMap[cat] = btn;
                 MenuCategoryButtons.Children.Add(btn);
@@ -102,9 +116,8 @@ public partial class AdminPage : TablePageBase
         foreach (var (cat, btn) in _menuCategoryBtnMap)
         {
             var isActive = cat == Vm.SelectedCategory;
-            // F-03: AppColors statik cache
-            btn.BackgroundColor = isActive ? AppColors.Header     : AppColors.Background;
-            btn.TextColor       = isActive ? Colors.White         : AppColors.TextMuted;
+            btn.BackgroundColor = isActive ? AppColors.Header : AppColors.Background;
+            btn.TextColor = isActive ? Colors.White : AppColors.TextMuted;
         }
     }
 
@@ -132,13 +145,13 @@ public partial class AdminPage : TablePageBase
                 Text = item.Name,
                 FontSize = 14,
                 FontAttributes = FontAttributes.Bold,
-                TextColor = AppColors.TextMain           // F-03
+                TextColor = AppColors.TextMain
             });
             nameStack.Children.Add(new Label
             {
                 Text = item.Category,
                 FontSize = 11,
-                TextColor = AppColors.TextMuted          // F-03
+                TextColor = AppColors.TextMuted
             });
             Grid.SetColumn(nameStack, 0);
 
@@ -147,7 +160,7 @@ public partial class AdminPage : TablePageBase
                 Text = $"₺{item.Price:F0}",
                 FontSize = 14,
                 FontAttributes = FontAttributes.Bold,
-                TextColor = AppColors.Accent,            // F-03
+                TextColor = AppColors.Accent,
                 VerticalOptions = LayoutOptions.Center,
                 HorizontalOptions = LayoutOptions.Center
             };
@@ -156,7 +169,7 @@ public partial class AdminPage : TablePageBase
             var editBtn = new Button
             {
                 Text = "✏️",
-                BackgroundColor = AppColors.AccentLight, // F-03
+                BackgroundColor = AppColors.AccentLight,
                 TextColor = AppColors.Accent,
                 BorderColor = AppColors.AccentBorder,
                 BorderWidth = 1,
@@ -176,7 +189,7 @@ public partial class AdminPage : TablePageBase
                 if (editPage.Result != null)
                 {
                     await Vm.UpdateMenuItemFullAsync(editPage.Result);
-                    _menuListDirty = true; // F-07: sonraki tab açılışında rebuild
+                    _menuListDirty = true;
                     RebuildCategoryFilter();
                     BuildMenuList();
                     _menuListDirty = false;
@@ -187,7 +200,7 @@ public partial class AdminPage : TablePageBase
             var deleteBtn = new Button
             {
                 Text = "🗑️",
-                BackgroundColor = AppColors.TableFull,   // F-03
+                BackgroundColor = AppColors.TableFull,
                 TextColor = AppColors.Danger,
                 BorderColor = AppColors.TableFullBorder,
                 BorderWidth = 1,
@@ -204,7 +217,7 @@ public partial class AdminPage : TablePageBase
                     $"{item.Name} silinsin mi?", "Evet", "Hayır");
                 if (!confirm) return;
                 await Vm.DeleteMenuItemAsync(item.Id);
-                _menuListDirty = true; // F-07
+                _menuListDirty = true;
                 RebuildCategoryFilter();
                 BuildMenuList();
                 _menuListDirty = false;
@@ -221,7 +234,7 @@ public partial class AdminPage : TablePageBase
                 Content = grid,
                 BackgroundColor = Colors.White,
                 StrokeThickness = 1,
-                Stroke = AppColors.CardBorder,           // F-03
+                Stroke = AppColors.CardBorder,
                 StrokeShape = new Microsoft.Maui.Controls.Shapes.RoundRectangle { CornerRadius = 12 },
                 Margin = new Thickness(0, 0, 0, 8)
             };
@@ -241,7 +254,7 @@ public partial class AdminPage : TablePageBase
         if (success)
         {
             NewItemCategoryPicker.SelectedIndex = -1;
-            _menuListDirty = true; // F-07
+            _menuListDirty = true;
             RebuildCategoryFilter();
             BuildMenuList();
             _menuListDirty = false;
@@ -252,29 +265,140 @@ public partial class AdminPage : TablePageBase
         }
     }
 
+    // ── RAPOR ─────────────────────────────────────────
+
+    private void OnRangeSelected(object sender, EventArgs e)
+    {
+        if (sender is not Button clicked) return;
+        if (clicked == BtnToday) SelectReportToday();
+        else SelectReportThisWeek();
+    }
+
+    private void SelectReportToday()
+    {
+        _reportFrom = DateTime.UtcNow.Date;
+        _reportTo = _reportFrom.AddDays(1).AddSeconds(-1);
+        LblDateRange.Text = $"Bugün — {_reportFrom:dd.MM.yyyy}";
+
+        BtnToday.BackgroundColor = AppColors.Header;
+        BtnToday.TextColor = Colors.White;
+        BtnThisWeek.BackgroundColor = Colors.White;
+        BtnThisWeek.TextColor = AppColors.TextMuted;
+    }
+
+    private void SelectReportThisWeek()
+    {
+        var today = DateTime.UtcNow.Date;
+        var weekDay = (int)today.DayOfWeek;
+        _reportFrom = today.AddDays(-(weekDay == 0 ? 6 : weekDay - 1));
+        _reportTo = _reportFrom.AddDays(7).AddSeconds(-1);
+        LblDateRange.Text = $"Bu hafta — {_reportFrom:dd.MM.yyyy} – {_reportTo:dd.MM.yyyy}";
+
+        BtnThisWeek.BackgroundColor = AppColors.Header;
+        BtnThisWeek.TextColor = Colors.White;
+        BtnToday.BackgroundColor = Colors.White;
+        BtnToday.TextColor = AppColors.TextMuted;
+    }
+
+    private async void OnGenerateReportClicked(object sender, EventArgs e)
+    {
+        var title = EntryReportTitle.Text?.Trim();
+        if (string.IsNullOrEmpty(title))
+        {
+            await DisplayAlert("Uyarı", "Lütfen bir rapor başlığı girin.", "Tamam");
+            return;
+        }
+
+        SetReportLoading(true);
+        HideReportCards();
+
+        var result = await _reportService.GenerateAndUploadReportAsync(_reportFrom, _reportTo, title);
+
+        SetReportLoading(false);
+
+        if (result.Success && result.Data != null)
+        {
+            _lastReportUrl = result.Data;
+            LblReportUrl.Text = _lastReportUrl;
+            ReportResultCard.IsVisible = true;
+        }
+        else
+        {
+            LblReportError.Text = $"❌ {result.Message}";
+            ReportErrorCard.IsVisible = true;
+        }
+    }
+
+    private async void OnOpenReportLinkClicked(object sender, EventArgs e)
+    {
+        if (_lastReportUrl is null) return;
+        await Launcher.OpenAsync(_lastReportUrl);
+    }
+
+    private async void OnCopyReportLinkClicked(object sender, EventArgs e)
+    {
+        if (_lastReportUrl is null) return;
+        await Clipboard.SetTextAsync(_lastReportUrl);
+        await DisplayAlert("Kopyalandı", "İndirme bağlantısı panoya kopyalandı.", "Tamam");
+    }
+
+    private void SetReportLoading(bool loading)
+    {
+        ReportSpinner.IsRunning = loading;
+        ReportSpinner.IsVisible = loading;
+        BtnGenerate.IsEnabled = !loading;
+        BtnGenerate.Text = loading ? "Oluşturuluyor..." : "📄  PDF Oluştur ve Yükle";
+    }
+
+    private void HideReportCards()
+    {
+        ReportResultCard.IsVisible = false;
+        ReportErrorCard.IsVisible = false;
+    }
+
     // ── TAB GEÇİŞLERİ ────────────────────────────────
 
     private void OnTabTables(object sender, EventArgs e)
     {
         TablesSection.IsVisible = true;
         MenuSection.IsVisible = false;
-        // F-03: AppColors statik cache
+        ReportSection.IsVisible = false;
+
         TabTables.BackgroundColor = AppColors.Header;
         TabTables.TextColor = Colors.White;
         TabMenu.BackgroundColor = Colors.White;
         TabMenu.TextColor = AppColors.TextMuted;
+        TabReport.BackgroundColor = Colors.White;
+        TabReport.TextColor = AppColors.TextMuted;
     }
 
     private void OnTabMenu(object sender, EventArgs e)
     {
         TablesSection.IsVisible = false;
         MenuSection.IsVisible = true;
-        // F-03: AppColors statik cache
+        ReportSection.IsVisible = false;
+
         TabMenu.BackgroundColor = AppColors.Header;
         TabMenu.TextColor = Colors.White;
         TabTables.BackgroundColor = Colors.White;
         TabTables.TextColor = AppColors.TextMuted;
+        TabReport.BackgroundColor = Colors.White;
+        TabReport.TextColor = AppColors.TextMuted;
 
         BuildMenuTab(); // F-07: dirty flag içinde kontrol edilir
+    }
+
+    private void OnTabReport(object sender, EventArgs e)
+    {
+        TablesSection.IsVisible = false;
+        MenuSection.IsVisible = false;
+        ReportSection.IsVisible = true;
+
+        TabReport.BackgroundColor = AppColors.Header;
+        TabReport.TextColor = Colors.White;
+        TabTables.BackgroundColor = Colors.White;
+        TabTables.TextColor = AppColors.TextMuted;
+        TabMenu.BackgroundColor = Colors.White;
+        TabMenu.TextColor = AppColors.TextMuted;
     }
 }

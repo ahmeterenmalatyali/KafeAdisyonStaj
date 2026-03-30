@@ -63,6 +63,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<PackageReference Include="QuestPDF" Version="2024.10.0" />
 		<PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
 		<PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="9.0.0" />
 		<PackageReference Include="Microsoft.Maui.Controls" Version="$(MauiVersion)" />
@@ -73,6 +74,9 @@
 	<ItemGroup>
 		<Compile Update="Views\Admin\EditMenuItemPage.xaml.cs">
 			<DependentUpon>EditMenuItemPage.xaml</DependentUpon>
+		</Compile>
+		<Compile Update="Views\Admin\SalesReportPage.xaml.cs">
+		  <DependentUpon>SalesReportPage.xaml</DependentUpon>
 		</Compile>
 		<Compile Update="Views\LoginPage.xaml.cs">
 			<DependentUpon>LoginPage.xaml</DependentUpon>
@@ -85,6 +89,9 @@
 		</MauiXaml>
 		<MauiXaml Update="Views\Admin\EditMenuItemPage.xaml">
 			<Generator>MSBuild:Compile</Generator>
+		</MauiXaml>
+		<MauiXaml Update="Views\Admin\SalesReportPage.xaml">
+		  <Generator>MSBuild:Compile</Generator>
 		</MauiXaml>
 		<MauiXaml Update="Views\LoginPage.xaml">
 			<Generator>MSBuild:Compile</Generator>

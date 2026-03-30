@@ -30,6 +30,7 @@ Garsonlar masaları anlık takip edebilir, sipariş açıp kapatabilir; admin is
 - Menü ürünü ekleme, düzenleme, soft-delete (pasife alma)
 - Kategori bazlı listeleme
 - Tüm tablolar üzerinde tam yetki
+- **PDF Satış Raporu:** Günlük veya haftalık satış özeti PDF olarak oluşturulur, Supabase Storage'a yüklenir ve indirme bağlantısı üretilir
 
 ### 🔐 Genel
 - Rol bazlı giriş ekranı (Garson / Admin)
@@ -43,13 +44,14 @@ Garsonlar masaları anlık takip edebilir, sipariş açıp kapatabilir; admin is
 ```
 KafeAdisyon/
 ├── Application/
-│   ├── Interfaces/          # IMenuService · IOrderService · ITableService · IConnectivityService
+│   ├── Interfaces/          # IMenuService · IOrderService · ITableService · IConnectivityService · ISalesReportService
 │   └── DTOs/RequestModels/  # Tip güvenli istek modelleri
 ├── Infrastructure/
 │   ├── Client/              # DatabaseClient — Supabase/Postgrest bağlantısı
 │   ├── Offline/             # OfflineQueue — kalıcı işlem kuyruğu
 │   └── Services/            # MenuService · OrderService · TableService
 │                            # ConnectivityService · OfflineAwareOrderService
+│                            # SalesReportService · SupabaseStorageService
 ├── ViewModels/              # MVVM — CommunityToolkit.Mvvm (ObservableProperty)
 ├── Views/                   # XAML sayfaları (Login · Waiter · Order · Admin)
 ├── Models/                  # Tablo eşleme modelleri
@@ -73,6 +75,8 @@ Mimari, staj yerindeki backend projesinin katmanlı yapısından öğrenilerek u
 | ORM | supabase-csharp 0.16.2 |
 | Yapılandırma | Microsoft.Extensions.Configuration.Json |
 | Test | xUnit — Unit & Integration |
+| PDF | QuestPDF 2024.10 (Community) |
+| Storage | Supabase Storage REST API |
 | Platform | Android · Windows |
 
 ---
@@ -180,6 +184,8 @@ dotnet test KafeAdisyon_IntegrationTests/
 **Race condition koruması:** `OrderViewModel` içinde `SemaphoreSlim(1,1)` kullanılarak aynı masa için eş zamanlı iki sipariş oluşturulması önlenir.
 
 **Soft delete:** Menü ürünleri veritabanından silinmez; `is_active = false` olarak işaretlenir. Geçmiş siparişlerin bütünlüğü korunur.
+
+**PDF Rapor & Storage:** `SalesReportService`, belirtilen tarih aralığındaki kapanan siparişleri ve kalemlerini Supabase'den çeker; en çok satan ürün, toplam ciro gibi istatistikleri hesaplar. QuestPDF Fluent API ile oluşturulan PDF baytı hiçbir zaman diske yazılmaz, doğrudan `SupabaseStorageService` üzerinden Supabase Storage'a HTTP PUT isteğiyle yüklenir ve public indirme URL'i döndürülür. Storage servisi Supabase SDK yerine `HttpClient` kullanır — SDK deadlock sorununu önlemek için (bkz. AGENTS.md).
 
 **Split Bill:** `SplitBillPage` bir `TaskCompletionSource` üzerinden çalışır; modal kapatıldığında `PaidQuantities` sözlüğünü caller sayfaya geri döndürür, `OrderPage` kalan ürünleri doğrudan günceller.
 

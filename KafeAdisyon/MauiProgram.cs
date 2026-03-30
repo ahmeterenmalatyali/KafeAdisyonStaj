@@ -16,6 +16,7 @@ public static class MauiProgram
 {
     public static MauiApp CreateMauiApp()
     {
+        QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
         var builder = MauiApp.CreateBuilder();
         builder
             .UseMauiApp<App>()
@@ -45,7 +46,10 @@ public static class MauiProgram
             if (stream != null)
                 builder.Configuration.AddJsonStream(stream);
         }
-
+        //───  Sales Report ───────────────────────────────────────────────────────
+        builder.Services.AddSingleton<SupabaseStorageService>();
+        builder.Services.AddTransient<ISalesReportService, SalesReportService>();
+        builder.Services.AddTransient<SalesReportPage>();
         // ─── Infrastructure ──────────────────────────────────────────────────
         builder.Services.AddSingleton<DatabaseClient>();
 

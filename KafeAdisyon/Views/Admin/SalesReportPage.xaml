@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="KafeAdisyon.Views.Admin.SalesReportPage"
+             Title="Satış Raporu"
+             BackgroundColor="#FAF7F2">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="20" Spacing="16">
+
+            <!-- Başlık -->
+            <Border BackgroundColor="#3D2314" StrokeThickness="0"
+                    StrokeShape="RoundRectangle 12"
+                    Padding="16">
+                <Label Text="📊 Günlük / Haftalık Satış Raporu"
+                       FontSize="18" FontAttributes="Bold"
+                       TextColor="White" HorizontalOptions="Center"/>
+            </Border>
+
+            <!-- Tarih Seçimi -->
+            <Border BackgroundColor="White" StrokeThickness="1"
+                    Stroke="#E8D5C4"
+                    StrokeShape="RoundRectangle 12"
+                    Padding="16">
+                <VerticalStackLayout Spacing="12">
+                    <Label Text="Tarih Aralığı" FontAttributes="Bold"
+                           FontSize="13" TextColor="#3D2314"/>
+
+                    <!-- AGENTS.md: Picker Windows'ta bozuluyor → Toggle Button kullan -->
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                        <Button x:Name="BtnToday" Grid.Column="0"
+                                Text="Bugün"
+                                BackgroundColor="#3D2314" TextColor="White"
+                                CornerRadius="8" HeightRequest="40"
+                                Clicked="OnRangeSelected"/>
+                        <Button x:Name="BtnThisWeek" Grid.Column="1"
+                                Text="Bu Hafta"
+                                BackgroundColor="White" TextColor="#A0856A"
+                                BorderColor="#E8D5C4" BorderWidth="1"
+                                CornerRadius="8" HeightRequest="40"
+                                Clicked="OnRangeSelected"/>
+                    </Grid>
+
+                    <!-- Seçili aralık göstergesi -->
+                    <Label x:Name="LblDateRange"
+                           Text="Bugün seçili"
+                           FontSize="12" TextColor="#A0856A"
+                           HorizontalOptions="Center"/>
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- Rapor Başlığı -->
+            <Border BackgroundColor="White" StrokeThickness="1"
+                    Stroke="#E8D5C4"
+                    StrokeShape="RoundRectangle 12"
+                    Padding="16">
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="Rapor Başlığı" FontAttributes="Bold"
+                           FontSize="13" TextColor="#3D2314"/>
+                    <Entry x:Name="EntryTitle"
+                           Placeholder="ör. 27 Mart 2026 Satış Raporu"
+                           BackgroundColor="#FAF7F2"
+                           TextColor="#2C1810"
+                           PlaceholderColor="#A0856A"
+                           FontSize="13"/>
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- Oluştur Butonu -->
+            <Button x:Name="BtnGenerate"
+                    Text="📄 PDF Oluştur ve Yükle"
+                    BackgroundColor="#C8702A" TextColor="White"
+                    FontSize="15" FontAttributes="Bold"
+                    CornerRadius="10" HeightRequest="52"
+                    Clicked="OnGenerateClicked"/>
+
+            <!-- Yükleniyor göstergesi -->
+            <ActivityIndicator x:Name="Spinner"
+                               IsRunning="False" IsVisible="False"
+                               Color="#C8702A" HeightRequest="40"/>
+
+            <!-- Sonuç Kartı (başlangıçta gizli) -->
+            <Border x:Name="ResultCard" IsVisible="False"
+                    BackgroundColor="White" StrokeThickness="1"
+                    Stroke="#C8E6C9"
+                    StrokeShape="RoundRectangle 12"
+                    Padding="16">
+                <VerticalStackLayout Spacing="10">
+                    <Label Text="✅ Rapor Hazır" FontAttributes="Bold"
+                           FontSize="14" TextColor="#3D2314"/>
+                    <Label x:Name="LblResultInfo"
+                           FontSize="12" TextColor="#A0856A"/>
+                    <Button x:Name="BtnOpenLink"
+                            Text="🔗 İndir / Aç"
+                            BackgroundColor="#3D2314" TextColor="White"
+                            CornerRadius="8" HeightRequest="40"
+                            Clicked="OnOpenLinkClicked"/>
+                    <Button x:Name="BtnCopyLink"
+                            Text="📋 Bağlantıyı Kopyala"
+                            BackgroundColor="White" TextColor="#5C3317"
+                            BorderColor="#E8D5C4" BorderWidth="1"
+                            CornerRadius="8" HeightRequest="40"
+                            Clicked="OnCopyLinkClicked"/>
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- Hata Kartı (başlangıçta gizli) -->
+            <Border x:Name="ErrorCard" IsVisible="False"
+                    BackgroundColor="#FFEBEE" StrokeThickness="1"
+                    Stroke="#FFCDD2"
+                    StrokeShape="RoundRectangle 12"
+                    Padding="16">
+                <Label x:Name="LblError"
+                       FontSize="12" TextColor="#B71C1C"/>
+            </Border>
+
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

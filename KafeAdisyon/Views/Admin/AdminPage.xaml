@@ -34,19 +34,22 @@
             </Grid>
         </Border>
 
-        <!-- Tab Bar -->
-        <Grid Grid.Row="1" ColumnDefinitions="*,*"
-              BackgroundColor="#FAF7F2" Padding="16,12,16,8">
+        <!-- Tab Bar — 3 sekme -->
+        <Grid Grid.Row="1" ColumnDefinitions="*,*,*"
+              BackgroundColor="#FAF7F2" Padding="16,12,16,8" ColumnSpacing="6">
             <Button Grid.Column="0" x:Name="TabTables"
                     Text="🪑  Masalar" Clicked="OnTabTables"
                     BackgroundColor="#3D2314" TextColor="White"
                     FontAttributes="Bold" FontSize="14"
-                    CornerRadius="12" Margin="0,0,6,0" HeightRequest="44"/>
+                    CornerRadius="12" HeightRequest="44"/>
             <Button Grid.Column="1" x:Name="TabMenu"
                     Text="🍽️  Menü" Clicked="OnTabMenu"
                     BackgroundColor="White" TextColor="#A0856A"
-                    FontSize="14" CornerRadius="12"
-                    Margin="6,0,0,0" HeightRequest="44"/>
+                    FontSize="14" CornerRadius="12" HeightRequest="44"/>
+            <Button Grid.Column="2" x:Name="TabReport"
+                    Text="📊  Rapor" Clicked="OnTabReport"
+                    BackgroundColor="White" TextColor="#A0856A"
+                    FontSize="14" CornerRadius="12" HeightRequest="44"/>
         </Grid>
 
         <ScrollView Grid.Row="2" Padding="16,4,16,20">
@@ -200,6 +203,103 @@
                     </ScrollView>
 
                     <VerticalStackLayout x:Name="MenuListLayout" Spacing="0"/>
+
+                </VerticalStackLayout>
+
+                <!-- RAPOR -->
+                <VerticalStackLayout x:Name="ReportSection" IsVisible="False" Spacing="12">
+
+                    <!-- Tarih Aralığı -->
+                    <Border BackgroundColor="White" StrokeThickness="1"
+                            Stroke="#F0E6DA" StrokeShape="RoundRectangle 14"
+                            Padding="16">
+                        <VerticalStackLayout Spacing="10">
+                            <Label Text="Tarih Aralığı" FontSize="15"
+                                   FontAttributes="Bold" TextColor="#3D2314"/>
+                            <!-- AGENTS.md: Picker Windows'ta bozuluyor → Toggle Button -->
+                            <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                                <Button x:Name="BtnToday" Grid.Column="0"
+                                        Text="Bugün"
+                                        BackgroundColor="#3D2314" TextColor="White"
+                                        CornerRadius="10" HeightRequest="42" FontSize="14"
+                                        Clicked="OnRangeSelected"/>
+                                <Button x:Name="BtnThisWeek" Grid.Column="1"
+                                        Text="Bu Hafta"
+                                        BackgroundColor="White" TextColor="#A0856A"
+                                        BorderColor="#E8D5C4" BorderWidth="1"
+                                        CornerRadius="10" HeightRequest="42" FontSize="14"
+                                        Clicked="OnRangeSelected"/>
+                            </Grid>
+                            <Label x:Name="LblDateRange"
+                                   Text="Bugün seçili"
+                                   FontSize="12" TextColor="#A0856A"
+                                   HorizontalOptions="Center"/>
+                        </VerticalStackLayout>
+                    </Border>
+
+                    <!-- Rapor Başlığı -->
+                    <Border BackgroundColor="White" StrokeThickness="1"
+                            Stroke="#F0E6DA" StrokeShape="RoundRectangle 14"
+                            Padding="16">
+                        <VerticalStackLayout Spacing="8">
+                            <Label Text="Rapor Başlığı" FontSize="15"
+                                   FontAttributes="Bold" TextColor="#3D2314"/>
+                            <Entry x:Name="EntryReportTitle"
+                                   Placeholder="ör. 27 Mart 2026 Satış Raporu"
+                                   BackgroundColor="#FAF7F2"
+                                   TextColor="#2C1810"
+                                   PlaceholderColor="#C4B09A"
+                                   FontSize="14"/>
+                        </VerticalStackLayout>
+                    </Border>
+
+                    <!-- Oluştur Butonu -->
+                    <Button x:Name="BtnGenerate"
+                            Text="📄  PDF Oluştur ve Yükle"
+                            BackgroundColor="#C8702A" TextColor="White"
+                            FontSize="15" FontAttributes="Bold"
+                            CornerRadius="12" HeightRequest="52"
+                            Clicked="OnGenerateReportClicked"/>
+
+                    <!-- Yükleniyor -->
+                    <ActivityIndicator x:Name="ReportSpinner"
+                                       IsRunning="False" IsVisible="False"
+                                       Color="#C8702A" HeightRequest="40"/>
+
+                    <!-- Başarı Kartı -->
+                    <Border x:Name="ReportResultCard" IsVisible="False"
+                            BackgroundColor="White" StrokeThickness="1"
+                            Stroke="#C8E6C9" StrokeShape="RoundRectangle 14"
+                            Padding="16">
+                        <VerticalStackLayout Spacing="10">
+                            <Label Text="✅ Rapor Hazır"
+                                   FontAttributes="Bold" FontSize="14" TextColor="#3D2314"/>
+                            <Label x:Name="LblReportUrl"
+                                   FontSize="11" TextColor="#A0856A"/>
+                            <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                                <Button Grid.Column="0"
+                                        Text="🔗 Aç"
+                                        BackgroundColor="#3D2314" TextColor="White"
+                                        CornerRadius="8" HeightRequest="40"
+                                        Clicked="OnOpenReportLinkClicked"/>
+                                <Button Grid.Column="1"
+                                        Text="📋 Kopyala"
+                                        BackgroundColor="White" TextColor="#5C3317"
+                                        BorderColor="#E8D5C4" BorderWidth="1"
+                                        CornerRadius="8" HeightRequest="40"
+                                        Clicked="OnCopyReportLinkClicked"/>
+                            </Grid>
+                        </VerticalStackLayout>
+                    </Border>
+
+                    <!-- Hata Kartı -->
+                    <Border x:Name="ReportErrorCard" IsVisible="False"
+                            BackgroundColor="#FFEBEE" StrokeThickness="1"
+                            Stroke="#FFCDD2" StrokeShape="RoundRectangle 14"
+                            Padding="16">
+                        <Label x:Name="LblReportError"
+                               FontSize="12" TextColor="#B71C1C"/>
+                    </Border>
 
                 </VerticalStackLayout>
 

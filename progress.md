@@ -105,11 +105,25 @@ Bağlantı bilgileri `appsettings.json` içinde — bu dosya `.gitignore`'da, re
 | `decimal` Postgrest precision hatası | Tüm fiyat alanları `double` yapıldı |
 | Çoklu silmede bazı ürünler atlanıyor | `RemoveItemDbOnlyAsync` → `ReloadOrderItemsAsync` |
 | Ürün ekleme yavaş hissettiriyor | Optimistic update: önce UI, sonra DB |
+| Storage SDK deadlock yapıyor | `SupabaseStorageService`'de HttpClient ile doğrudan REST API kullanıldı |
+
+---
+
+### PDF Rapor & Supabase Storage (33. Gün)
+- [x] `ISalesReportService` arayüzü
+- [x] `ReportDtos` — `OrderSummaryDto`, `OrderItemSummaryDto`, `ReportSummaryDto`
+- [x] `SupabaseStorageService` — HttpClient ile Supabase Storage REST API (PUT + public URL)
+- [x] `SalesReportService` — Supabase'den veri çekme + QuestPDF ile PDF üretimi + Storage yükleme
+- [x] `SalesReportPage` — Admin paneli rapor ekranı (Bugün / Bu Hafta seçimi, indirme linki)
+- [x] DI kaydı — `MauiProgram.cs`'e `SupabaseStorageService` ve `ISalesReportService` eklendi
+- [x] Admin paneline "📊 Rapor" sekmesi eklendi
 
 ---
 
 ## Sonraki Adımlar (Opsiyonel)
 
-- [ ] Günlük satış özeti ekranı (kapanan siparişlerin toplamı)
-- [ ] Offline kuyruk — ağ yokken beklet, bağlanınca gönder
+- [ ] Günlük satış özeti ekranı (kapanan siparişlerin toplamı) ✅ 33. günde yapıldı
+- [ ] Offline kuyruk — ağ yokken beklet, bağlanınca gönder ✅ 29-30. günlerde yapıldı
 - [ ] XML doc comment'ler (`/// <summary>`)
+- [ ] Rapor sayfasına özel tarih aralığı seçici (DatePicker — Windows uyumluluğu test edilmeli)
+- [ ] Aylık rapor desteği

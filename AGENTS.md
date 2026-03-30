@@ -51,6 +51,7 @@ Bunları denedim, çalışmıyor:
 - **`TapGestureRecognizer` + `Border`** → Windows ekranı donuyor. Tıklanabilir her şey `Button` olmalı.
 - **`Shadow` property'si** → Windows'ta crash veriyor. Hiç kullanmıyorum.
 - **`Supabase.Client.InitializeAsync()`** → deadlock yapıyor. Bunun yerine `Postgrest.Client` direkt kullanıyorum.
+- **`Supabase SDK` Storage metotları** → aynı deadlock riski. `SupabaseStorageService`'de `HttpClient` + REST API kullanıyorum.
 - **`Picker`** → Windows'ta seçili değeri göstermiyor. Kategori seçimi için toggle `Button` listesi yaptım.
 - **`decimal` fiyat alanı** → Postgrest'te precision hatası veriyor (özellikle 5 ile biten fiyatlarda). Her yerde `double` kullanıyorum.
 
@@ -175,17 +176,18 @@ if (stale.Data != null)
 ```
 KafeAdisyon/
 ├── Application/
-│   ├── Interfaces/          → IMenuService, IOrderService, ITableService, IConnectivityService
-│   └── DTOs/RequestModels/
+│   ├── Interfaces/          → IMenuService, IOrderService, ITableService, IConnectivityService, ISalesReportService
+│   └── DTOs/RequestModels/  → ReportDtos (OrderSummaryDto, ReportSummaryDto...)
 ├── Infrastructure/
 │   ├── Client/              → DatabaseClient.cs
 │   ├── Offline/             → OfflineQueue.cs
 │   └── Services/            → MenuService, OrderService, TableService,
-│                               ConnectivityService, OfflineAwareOrderService
+│                               ConnectivityService, OfflineAwareOrderService,
+│                               SalesReportService, SupabaseStorageService
 ├── ViewModels/              → AdminViewModel, OrderViewModel
 ├── Views/
 │   ├── LoginPage.xaml
-│   ├── Admin/               → AdminPage, EditMenuItemPage
+│   ├── Admin/               → AdminPage, EditMenuItemPage, SalesReportPage
 │   ├── Waiter/              → WaiterPage
 │   └── Order/               → OrderPage, SplitBillPage
 ├── Models/                  → TableModel, MenuItemModel, OrderModel, OrderItemModel
@@ -194,9 +196,31 @@ KafeAdisyon/
 
 ---
 
-## Derleme Hatası Alınca Bakılacaklar
+## Supabase Storage
 
-- Model namespace'i `Postgrest.Attributes` / `Postgrest.Models` olmalı — `Supabase.Postgrest` yazınca derleme hatası veriyor.
+SDK yerine `HttpClient` + REST API:
+
+```csharp
+// YANLIŞ — SDK deadlock yapıyor
+await supabase.Storage.From("reports").Upload(bytes, path);
+
+// DOĞRU — HttpClient ile doğrudan PUT
+var request = new HttpRequestMessage(HttpMethod.Put, uploadUrl) { Content = content };
+request.Headers.Add("x-upsert", "true");
+await _http.SendAsync(request);
+```
+
+Public URL formatı:
+```
+{Supabase:Url}/storage/v1/object/public/{bucket}/{fileName}
+```
+
+Bucket'ı Public olarak işaretlemeyi unutma:
+`Supabase Dashboard → Storage → reports bucket → Make Public`
+
+---
+
+## Derleme Hatası Alınca Bakılacaklar- Model namespace'i `Postgrest.Attributes` / `Postgrest.Models` olmalı — `Supabase.Postgrest` yazınca derleme hatası veriyor.
 - Visual Studio bazen otomatik `using Android...` ekliyor, Windows build'ini kırıyor — build hatasında ilk bakılan yer.
 - Integration test projesinin `SharedDefinitions.cs` dosyasına yeni interface eklenince `IConnectivityService` de dahil olmak üzere `KafeAdisyon.Application.Interfaces` namespace'indeki tüm interface'lerin orada tanımlı olduğunu kontrol et (ana proje referans verilmiyor, elle kopyalanıyor).
 - Build sırasında `dotnet_bot.png` dosya kilidi hatası alınırsa: VS'yi kapat, `obj/` ve `bin/` klasörlerini sil, yeniden aç.
