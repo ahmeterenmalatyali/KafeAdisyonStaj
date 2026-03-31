@@ -75,6 +75,9 @@
 		<Compile Update="Views\Admin\EditMenuItemPage.xaml.cs">
 			<DependentUpon>EditMenuItemPage.xaml</DependentUpon>
 		</Compile>
+		<Compile Update="Views\Admin\AuditLogPage.xaml.cs">
+		  <DependentUpon>AuditLogPage.xaml</DependentUpon>
+		</Compile>
 		<Compile Update="Views\Admin\SalesReportPage.xaml.cs">
 		  <DependentUpon>SalesReportPage.xaml</DependentUpon>
 		</Compile>
@@ -89,6 +92,9 @@
 		</MauiXaml>
 		<MauiXaml Update="Views\Admin\EditMenuItemPage.xaml">
 			<Generator>MSBuild:Compile</Generator>
+		</MauiXaml>
+		<MauiXaml Update="Views\Admin\AuditLogPage.xaml">
+		  <Generator>MSBuild:Compile</Generator>
 		</MauiXaml>
 		<MauiXaml Update="Views\Admin\SalesReportPage.xaml">
 		  <Generator>MSBuild:Compile</Generator>

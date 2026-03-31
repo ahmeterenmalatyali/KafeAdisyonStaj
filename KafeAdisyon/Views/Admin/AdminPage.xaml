@@ -35,7 +35,7 @@
         </Border>
 
         <!-- Tab Bar — 3 sekme -->
-        <Grid Grid.Row="1" ColumnDefinitions="*,*,*"
+        <Grid Grid.Row="1" ColumnDefinitions="*,*,*,*"
               BackgroundColor="#FAF7F2" Padding="16,12,16,8" ColumnSpacing="6">
             <Button Grid.Column="0" x:Name="TabTables"
                     Text="🪑  Masalar" Clicked="OnTabTables"
@@ -48,6 +48,10 @@
                     FontSize="14" CornerRadius="12" HeightRequest="44"/>
             <Button Grid.Column="2" x:Name="TabReport"
                     Text="📊  Rapor" Clicked="OnTabReport"
+                    BackgroundColor="White" TextColor="#A0856A"
+                    FontSize="14" CornerRadius="12" HeightRequest="44"/>
+            <Button Grid.Column="3" x:Name="TabLog"
+                    Text="🔍  Log" Clicked="OnTabLog"
                     BackgroundColor="White" TextColor="#A0856A"
                     FontSize="14" CornerRadius="12" HeightRequest="44"/>
         </Grid>
@@ -70,7 +74,7 @@
                         </HorizontalStackLayout>
                     </HorizontalStackLayout>
 
-                    <Grid ColumnDefinitions="*,*,*"
+                    <Grid ColumnDefinitions="*,*,*,*"
                           RowDefinitions="Auto,Auto,Auto,Auto,Auto"
                           ColumnSpacing="10" RowSpacing="10">
                         <Button x:Name="BtnA1" Grid.Row="0" Grid.Column="0" Text="A-1"
@@ -301,6 +305,15 @@
                                FontSize="12" TextColor="#B71C1C"/>
                     </Border>
 
+                </VerticalStackLayout>
+
+                <!-- LOG SEKMESİ -->
+                <VerticalStackLayout x:Name="LogSection" IsVisible="False" Spacing="12">
+                    <Button Text="🔍  İşlem Takibi Sayfasını Aç"
+                            BackgroundColor="#3D2314" TextColor="White"
+                            CornerRadius="12" HeightRequest="48"
+                            FontSize="15" FontAttributes="Bold"
+                            Clicked="OnOpenAuditLogClicked"/>
                 </VerticalStackLayout>
 
             </VerticalStackLayout>

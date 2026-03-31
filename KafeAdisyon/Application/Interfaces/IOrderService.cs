@@ -12,6 +12,7 @@ public interface IOrderService
     Task<BaseResponse<OrderModel?>> GetActiveOrderByTableAsync(string tableId);
     Task<BaseResponse<OrderModel>> CreateOrderAsync(string tableId);
     Task<BaseResponse<object>> CloseOrderAsync(CloseOrderRequest request);
+    Task<BaseResponse<object>> CancelOrderAsync(string orderId, string tableId);
     Task<BaseResponse<List<OrderItemModel>>> GetOrderItemsAsync(string orderId);
     Task<BaseResponse<OrderItemModel>> AddOrderItemAsync(AddOrderItemRequest request);
     Task<BaseResponse<object>> UpdateOrderItemQuantityAsync(UpdateOrderItemQuantityRequest request);

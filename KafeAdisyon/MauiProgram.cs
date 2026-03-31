@@ -17,6 +17,7 @@ public static class MauiProgram
     public static MauiApp CreateMauiApp()
     {
         QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
+
         var builder = MauiApp.CreateBuilder();
         builder
             .UseMauiApp<App>()
@@ -26,7 +27,7 @@ public static class MauiProgram
                 fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
             });
 
-        // Önce env variable'lardan oku, yoksa appsettings.json fallback
+        // ─── Konfigürasyon ───────────────────────────────────────────────────
         var envUrl = Environment.GetEnvironmentVariable("SUPABASE_URL");
         var envKey = Environment.GetEnvironmentVariable("SUPABASE_KEY");
 
@@ -46,28 +47,37 @@ public static class MauiProgram
             if (stream != null)
                 builder.Configuration.AddJsonStream(stream);
         }
-        //───  Sales Report ───────────────────────────────────────────────────────
-        builder.Services.AddSingleton<SupabaseStorageService>();
-        builder.Services.AddTransient<ISalesReportService, SalesReportService>();
-        builder.Services.AddTransient<SalesReportPage>();
+
         // ─── Infrastructure ──────────────────────────────────────────────────
         builder.Services.AddSingleton<DatabaseClient>();
 
-        // Offline altyapı — Singleton (uygulama boyunca tek örnek)
+        // Offline altyapı
         builder.Services.AddSingleton<IConnectivityService, ConnectivityService>();
         builder.Services.AddSingleton<OfflineQueue>();
 
-        // ─── Services ────────────────────────────────────────────────────────
-        // MAUI'de Scoped root container'dan resolve edilemez → Transient kullan
+        // ─── Auth & Session ──────────────────────────────────────────────────
+        // SessionContext Singleton — tüm uygulama boyunca tek örnek
+        builder.Services.AddSingleton<SessionContext>();
+        builder.Services.AddTransient<IAuthService, AuthService>();
 
+        // ─── Audit Log ───────────────────────────────────────────────────────
+        // Singleton: her servis aynı örneği kullanır, log sırası korunur
+        builder.Services.AddSingleton<IAuditLogService, AuditLogService>();
+
+        // ─── Sales Report ────────────────────────────────────────────────────
+        builder.Services.AddSingleton<SupabaseStorageService>();
+        builder.Services.AddTransient<ISalesReportService, SalesReportService>();
+        builder.Services.AddTransient<SalesReportPage>();
+
+        // ─── Services ────────────────────────────────────────────────────────
         builder.Services.AddTransient<ITableService, TableService>();
+
+        // MenuService artık IAuditLogService'e bağımlı
         builder.Services.AddTransient<IMenuService, MenuService>();
 
-        // Asıl OrderService somut tip olarak da kaydedilmeli —
-        // OfflineAwareOrderService constructor'ı OrderService'i direkt enjekte eder
+        // OrderService artık IAuditLogService'e bağımlı
+        // Somut tip olarak da kayıt gerekli — OfflineAwareOrderService direkt inject eder
         builder.Services.AddTransient<OrderService>();
-
-        // IOrderService isteklerini OfflineAwareOrderService karşılar
         builder.Services.AddTransient<IOrderService, OfflineAwareOrderService>();
 
         // ─── ViewModels ──────────────────────────────────────────────────────
@@ -77,6 +87,7 @@ public static class MauiProgram
         builder.Services.AddTransient<LoginPage>();
         builder.Services.AddTransient<AdminPage>();
         builder.Services.AddTransient<WaiterPage>();
+        builder.Services.AddTransient<AuditLogPage>();
 
 #if DEBUG
         builder.Logging.AddDebug();

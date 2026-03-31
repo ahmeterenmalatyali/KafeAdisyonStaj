@@ -7,121 +7,120 @@
 
     <Grid RowDefinitions="*,Auto,*">
 
-        <VerticalStackLayout Grid.Row="1"
-                             Spacing="0"
-                             Padding="36,0"
-                             HorizontalOptions="Center"
-                             WidthRequest="340">
+        <ScrollView Grid.Row="1">
+            <VerticalStackLayout Spacing="0" Padding="36,0"
+                                 HorizontalOptions="Center"
+                                 WidthRequest="340">
 
-            <!-- Logo -->
-            <Border BackgroundColor="#3D2314"
-                    StrokeThickness="0"
-                    StrokeShape="RoundRectangle 32"
-                    WidthRequest="90" HeightRequest="90"
-                    HorizontalOptions="Center"
-                    Margin="0,0,0,20">
-                <Label Text="☕" FontSize="44"
-                       HorizontalOptions="Center"
-                       VerticalOptions="Center"/>
-            </Border>
-
-            <Label Text="KOZA KAFE"
-                   FontSize="30" FontAttributes="Bold"
-                   TextColor="#3D2314"
-                   HorizontalOptions="Center"
-                   CharacterSpacing="5"
-                   Margin="0,0,0,6"/>
-
-            <Label Text="Adisyon Yönetim Sistemi"
-                   FontSize="13" TextColor="#A0856A"
-                   HorizontalOptions="Center"
-                   Margin="0,0,0,48"/>
-
-            <!--
-                AGENTS.md KURALLARI UYGULANDIKTAN SONRA:
-                - TapGestureRecognizer kaldırıldı → tıklanabilir alan için Grid üstüne
-                  şeffaf Button overlay kullanıldı (Windows uyumlu tek yöntem)
-                - Shadow kaldırıldı → Windows'ta crash yapar
-                - Border yalnızca görsel kap; tıklama Button'dan gelir
-            -->
-
-            <!-- Admin Kartı -->
-            <Grid Margin="0,0,0,14" HeightRequest="78">
-                <!-- Görsel katman: Border + içerik -->
+                <!-- Logo -->
                 <Border BackgroundColor="#3D2314"
                         StrokeThickness="0"
-                        StrokeShape="RoundRectangle 16">
-                    <Grid Padding="20,16" ColumnDefinitions="Auto,*,Auto">
-                        <Border Grid.Column="0"
-                                BackgroundColor="#5C3317"
-                                StrokeThickness="0"
-                                StrokeShape="RoundRectangle 10"
-                                WidthRequest="42" HeightRequest="42">
-                            <Label Text="👑" FontSize="20"
-                                   HorizontalOptions="Center"
-                                   VerticalOptions="Center"/>
-                        </Border>
-                        <VerticalStackLayout Grid.Column="1" Margin="14,0,0,0" Spacing="2" VerticalOptions="Center">
-                            <Label Text="Admin Girişi"
-                                   FontSize="16" FontAttributes="Bold"
-                                   TextColor="#FFFFFF"/>
-                            <Label Text="Tam yönetim yetkisi"
-                                   FontSize="12" TextColor="#C4956A"/>
-                        </VerticalStackLayout>
-                        <Label Grid.Column="2" Text="›"
-                               FontSize="24" TextColor="#C8702A"
-                               VerticalOptions="Center"/>
-                    </Grid>
+                        StrokeShape="RoundRectangle 32"
+                        WidthRequest="90" HeightRequest="90"
+                        HorizontalOptions="Center"
+                        Margin="0,32,0,20">
+                    <Label Text="☕" FontSize="44"
+                           HorizontalOptions="Center"
+                           VerticalOptions="Center"/>
                 </Border>
-                <!-- Tıklama katmanı: şeffaf Button (AGENTS.md uyumlu) -->
-                <Button BackgroundColor="Transparent"
-                        BorderWidth="0"
-                        Clicked="OnAdminClicked"
-                        CornerRadius="16"/>
-            </Grid>
 
-            <!-- Garson Kartı -->
-            <Grid HeightRequest="78">
-                <!-- Görsel katman -->
-                <Border BackgroundColor="#FFFFFF"
-                        StrokeThickness="1.5"
-                        Stroke="#E8D5C0"
-                        StrokeShape="RoundRectangle 16">
-                    <Grid Padding="20,16" ColumnDefinitions="Auto,*,Auto">
-                        <Border Grid.Column="0"
-                                BackgroundColor="#FDF0E4"
-                                StrokeThickness="0"
-                                StrokeShape="RoundRectangle 10"
-                                WidthRequest="42" HeightRequest="42">
-                            <Label Text="🧾" FontSize="20"
-                                   HorizontalOptions="Center"
-                                   VerticalOptions="Center"/>
+                <Label Text="KOZA KAFE"
+                       FontSize="30" FontAttributes="Bold"
+                       TextColor="#3D2314"
+                       HorizontalOptions="Center"
+                       CharacterSpacing="5"
+                       Margin="0,0,0,6"/>
+
+                <Label Text="Adisyon Yönetim Sistemi"
+                       FontSize="13" TextColor="#A0856A"
+                       HorizontalOptions="Center"
+                       Margin="0,0,0,36"/>
+
+                <!-- Giriş Formu -->
+                <Border BackgroundColor="White"
+                        StrokeThickness="1" Stroke="#E8D5C4"
+                        StrokeShape="RoundRectangle 16"
+                        Padding="20" Margin="0,0,0,14">
+                    <VerticalStackLayout Spacing="14">
+
+                        <Label Text="E-posta" FontSize="12"
+                               TextColor="#A0856A" FontAttributes="Bold"/>
+                        <Border BackgroundColor="#FAF7F2"
+                                StrokeThickness="1" Stroke="#E8D5C4"
+                                StrokeShape="RoundRectangle 10">
+                            <Entry x:Name="EntryEmail"
+                                   Placeholder="ornek@kafe.com"
+                                   Keyboard="Email"
+                                   BackgroundColor="Transparent"
+                                   TextColor="#2C1810"
+                                   PlaceholderColor="#C4B09A"
+                                   FontSize="14"
+                                   Margin="12,8"/>
                         </Border>
-                        <VerticalStackLayout Grid.Column="1" Margin="14,0,0,0" Spacing="2" VerticalOptions="Center">
-                            <Label Text="Garson Girişi"
-                                   FontSize="16" FontAttributes="Bold"
-                                   TextColor="#2C1810"/>
-                            <Label Text="Sipariş alma ekranı"
-                                   FontSize="12" TextColor="#A0856A"/>
-                        </VerticalStackLayout>
-                        <Label Grid.Column="2" Text="›"
-                               FontSize="24" TextColor="#C8702A"
-                               VerticalOptions="Center"/>
-                    </Grid>
+
+                        <Label Text="Şifre" FontSize="12"
+                               TextColor="#A0856A" FontAttributes="Bold"/>
+                        <Border BackgroundColor="#FAF7F2"
+                                StrokeThickness="1" Stroke="#E8D5C4"
+                                StrokeShape="RoundRectangle 10">
+                            <Entry x:Name="EntryPassword"
+                                   Placeholder="••••••••"
+                                   IsPassword="True"
+                                   BackgroundColor="Transparent"
+                                   TextColor="#2C1810"
+                                   PlaceholderColor="#C4B09A"
+                                   FontSize="14"
+                                   Margin="12,8"/>
+                        </Border>
+
+                        <Label Text="Cihaz Adı" FontSize="12"
+                               TextColor="#A0856A" FontAttributes="Bold"/>
+                        <Border BackgroundColor="#FAF7F2"
+                                StrokeThickness="1" Stroke="#E8D5C4"
+                                StrokeShape="RoundRectangle 10">
+                            <Entry x:Name="EntryDevice"
+                                   Placeholder="ör. Kasa-1, Garson-Tablet"
+                                   BackgroundColor="Transparent"
+                                   TextColor="#2C1810"
+                                   PlaceholderColor="#C4B09A"
+                                   FontSize="14"
+                                   Margin="12,8"/>
+                        </Border>
+
+                    </VerticalStackLayout>
                 </Border>
-                <!-- Tıklama katmanı: şeffaf Button -->
-                <Button BackgroundColor="Transparent"
-                        BorderWidth="0"
-                        Clicked="OnWaiterClicked"
-                        CornerRadius="16"/>
-            </Grid>
 
-        </VerticalStackLayout>
+                <!-- Hata mesajı -->
+                <Label x:Name="LblError"
+                       IsVisible="False"
+                       TextColor="#B71C1C"
+                       FontSize="12"
+                       HorizontalOptions="Center"
+                       Margin="0,0,0,10"/>
 
-        <Label Grid.Row="2" Text="v1.0 — Koza Kafe"
-               TextColor="#C4B09A" FontSize="12"
-               HorizontalOptions="Center"
-               VerticalOptions="End" Margin="0,0,0,20"/>
+                <!-- Giriş Butonu -->
+                <Button x:Name="BtnLogin"
+                        Text="Giriş Yap"
+                        BackgroundColor="#3D2314"
+                        TextColor="White"
+                        FontSize="16" FontAttributes="Bold"
+                        CornerRadius="14"
+                        HeightRequest="54"
+                        Clicked="OnLoginClicked"
+                        Margin="0,0,0,12"/>
+
+                <!-- Yükleniyor -->
+                <ActivityIndicator x:Name="Spinner"
+                                   IsRunning="False" IsVisible="False"
+                                   Color="#C8702A" HeightRequest="36"/>
+
+                <Label Grid.Row="2" Text="v2.0 — Koza Kafe"
+                       TextColor="#C4B09A" FontSize="12"
+                       HorizontalOptions="Center"
+                       Margin="0,20,0,32"/>
+
+            </VerticalStackLayout>
+        </ScrollView>
 
     </Grid>
 </ContentPage>

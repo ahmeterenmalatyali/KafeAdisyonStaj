@@ -1,4 +1,5 @@
 using KafeAdisyon.Application.Interfaces;
+using KafeAdisyon.Infrastructure.Services;
 using KafeAdisyon.Models;
 using KafeAdisyon.ViewModels;
 using KafeAdisyon.Views.Order;
@@ -363,6 +364,7 @@ public partial class AdminPage : TablePageBase
         TablesSection.IsVisible = true;
         MenuSection.IsVisible = false;
         ReportSection.IsVisible = false;
+        LogSection.IsVisible = false;
 
         TabTables.BackgroundColor = AppColors.Header;
         TabTables.TextColor = Colors.White;
@@ -377,6 +379,7 @@ public partial class AdminPage : TablePageBase
         TablesSection.IsVisible = false;
         MenuSection.IsVisible = true;
         ReportSection.IsVisible = false;
+        LogSection.IsVisible = false;
 
         TabMenu.BackgroundColor = AppColors.Header;
         TabMenu.TextColor = Colors.White;
@@ -393,6 +396,7 @@ public partial class AdminPage : TablePageBase
         TablesSection.IsVisible = false;
         MenuSection.IsVisible = false;
         ReportSection.IsVisible = true;
+        LogSection.IsVisible = false;
 
         TabReport.BackgroundColor = AppColors.Header;
         TabReport.TextColor = Colors.White;
@@ -400,5 +404,30 @@ public partial class AdminPage : TablePageBase
         TabTables.TextColor = AppColors.TextMuted;
         TabMenu.BackgroundColor = Colors.White;
         TabMenu.TextColor = AppColors.TextMuted;
+        TabLog.BackgroundColor = Colors.White;
+        TabLog.TextColor = AppColors.TextMuted;
+    }
+
+    private void OnTabLog(object sender, EventArgs e)
+    {
+        TablesSection.IsVisible = false;
+        MenuSection.IsVisible = false;
+        ReportSection.IsVisible = false;
+        LogSection.IsVisible = true;
+
+        TabLog.BackgroundColor = AppColors.Header;
+        TabLog.TextColor = Colors.White;
+        TabTables.BackgroundColor = Colors.White;
+        TabTables.TextColor = AppColors.TextMuted;
+        TabMenu.BackgroundColor = Colors.White;
+        TabMenu.TextColor = AppColors.TextMuted;
+        TabReport.BackgroundColor = Colors.White;
+        TabReport.TextColor = AppColors.TextMuted;
+    }
+
+    private async void OnOpenAuditLogClicked(object sender, EventArgs e)
+    {
+        var audit = Handler.MauiContext!.Services.GetService<IAuditLogService>()!;
+        await Navigation.PushAsync(new AuditLogPage(audit));
     }
 }

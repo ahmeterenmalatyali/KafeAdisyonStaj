@@ -10,31 +10,27 @@ namespace KafeAdisyon.Infrastructure.Services;
 /// <summary>
 /// Decorator pattern: IOrderService arayüzünü uygular, içinde gerçek OrderService'i sarar.
 ///
-/// Bağlantı VAR  → isteği doğrudan OrderService'e iletir (mevcut davranış).
-/// Bağlantı YOK  → işlemi OfflineQueue'ya kaydeder; UI'yı yanıltmamak için
-///                 başarılı gibi görünen bir yanıt döner (optimistic).
-///
-/// ConnectivityChanged eventi tetiklendiğinde FlushQueueAsync() çağrılır;
-/// kuyrukta bekleyen tüm işlemler Supabase'e sırayla gönderilir.
+/// Bağlantı VAR  → isteği doğrudan OrderService'e iletir.
+/// Bağlantı YOK  → işlemi OfflineQueue'ya kaydeder; optimistic yanıt döner.
+/// Bağlantı gelince → ConnectivityChanged eventi → FlushQueueAsync() otomatik tetiklenir.
 /// </summary>
 public class OfflineAwareOrderService : IOrderService
 {
-    private readonly IOrderService _inner;          // asıl OrderService
+    private readonly IOrderService _inner;
     private readonly IConnectivityService _conn;
     private readonly OfflineQueue _queue;
     private readonly ILogger<OfflineAwareOrderService> _logger;
     private readonly SemaphoreSlim _flushLock = new(1, 1);
 
-    // ─── İşlem adı sabitleri (kuyruk öğeleriyle eşleşmeli) ──────────────────
     private const string OpCreateOrder = "CreateOrder";
     private const string OpCloseOrder = "CloseOrder";
+    private const string OpCancelOrder = "CancelOrder";
     private const string OpAddItem = "AddItem";
     private const string OpUpdateQuantity = "UpdateQuantity";
     private const string OpRemoveItem = "RemoveItem";
-    private const string OpUpdateTableStatus = "UpdateTableStatus";
 
     public OfflineAwareOrderService(
-        OrderService inner,               // somut tip — DI'dan gelen asıl servis
+        OrderService inner,
         IConnectivityService connectivity,
         OfflineQueue queue,
         ILogger<OfflineAwareOrderService> logger)
@@ -44,7 +40,6 @@ public class OfflineAwareOrderService : IOrderService
         _queue = queue;
         _logger = logger;
 
-        // Bağlantı gelince kuyruğu otomatik boşalt
         _conn.ConnectivityChanged += async (_, isConnected) =>
         {
             if (isConnected)
@@ -55,13 +50,15 @@ public class OfflineAwareOrderService : IOrderService
         };
     }
 
-    // ─── IOrderService implementasyonu ───────────────────────────────────────
+    // ─── Okuma işlemleri — her zaman DB'den ─────────────────────────────────
 
     public Task<BaseResponse<OrderModel?>> GetActiveOrderByTableAsync(string tableId)
-        => _inner.GetActiveOrderByTableAsync(tableId);   // okuma — her zaman DB'den
+        => _inner.GetActiveOrderByTableAsync(tableId);
 
     public Task<BaseResponse<List<OrderItemModel>>> GetOrderItemsAsync(string orderId)
-        => _inner.GetOrderItemsAsync(orderId);            // okuma — her zaman DB'den
+        => _inner.GetOrderItemsAsync(orderId);
+
+    // ─── Yazma işlemleri — offline kuyruğu destekli ─────────────────────────
 
     public async Task<BaseResponse<OrderModel>> CreateOrderAsync(string tableId)
     {
@@ -71,7 +68,6 @@ public class OfflineAwareOrderService : IOrderService
         _logger.LogWarning("Offline: CreateOrder kuyruğa alındı. TableId={TableId}", tableId);
         await _queue.EnqueueAsync(OpCreateOrder, tableId);
 
-        // Geçici model döndür — UI bunu optimistic olarak kullanır
         return BaseResponse<OrderModel>.SuccessResult(new OrderModel
         {
             Id = $"_offline_{Guid.NewGuid()}",
@@ -89,6 +85,16 @@ public class OfflineAwareOrderService : IOrderService
         _logger.LogWarning("Offline: CloseOrder kuyruğa alındı. OrderId={Id}", request.OrderId);
         await _queue.EnqueueAsync(OpCloseOrder, request);
         return BaseResponse<object>.SuccessResult(null, "[Offline] Hesap kapatma kuyruğa alındı");
+    }
+
+    public async Task<BaseResponse<object>> CancelOrderAsync(string orderId, string tableId)
+    {
+        if (_conn.IsConnected)
+            return await _inner.CancelOrderAsync(orderId, tableId);
+
+        _logger.LogWarning("Offline: CancelOrder kuyruğa alındı. OrderId={Id}", orderId);
+        await _queue.EnqueueAsync(OpCancelOrder, new { orderId, tableId });
+        return BaseResponse<object>.SuccessResult(null, "[Offline] İptal kuyruğa alındı");
     }
 
     public async Task<BaseResponse<OrderItemModel>> AddOrderItemAsync(AddOrderItemRequest request)
@@ -129,6 +135,9 @@ public class OfflineAwareOrderService : IOrderService
         await _queue.EnqueueAsync(OpRemoveItem, itemId);
         return BaseResponse<object>.SuccessResult(null, "[Offline] Kaldırma işlemi kuyruğa alındı");
     }
+
+    // ─── Flush ──────────────────────────────────────────────────────────────
+
     public async Task FlushQueueAsync()
     {
         if (!await _flushLock.WaitAsync(0))
@@ -185,36 +194,39 @@ public class OfflineAwareOrderService : IOrderService
             case OpCreateOrder:
                 {
                     var tableId = OfflineQueue.Deserialize<string>(item.Payload);
-                    var r = await _inner.CreateOrderAsync(tableId);
-                    return r.Success;
+                    return (await _inner.CreateOrderAsync(tableId)).Success;
                 }
             case OpCloseOrder:
                 {
                     var req = OfflineQueue.Deserialize<CloseOrderRequest>(item.Payload);
-                    var r = await _inner.CloseOrderAsync(req);
-                    return r.Success;
+                    return (await _inner.CloseOrderAsync(req)).Success;
+                }
+            case OpCancelOrder:
+                {
+                    var req = OfflineQueue.Deserialize<CancelPayload>(item.Payload);
+                    return (await _inner.CancelOrderAsync(req.OrderId, req.TableId)).Success;
                 }
             case OpAddItem:
                 {
                     var req = OfflineQueue.Deserialize<AddOrderItemRequest>(item.Payload);
-                    var r = await _inner.AddOrderItemAsync(req);
-                    return r.Success;
+                    return (await _inner.AddOrderItemAsync(req)).Success;
                 }
             case OpUpdateQuantity:
                 {
                     var req = OfflineQueue.Deserialize<UpdateOrderItemQuantityRequest>(item.Payload);
-                    var r = await _inner.UpdateOrderItemQuantityAsync(req);
-                    return r.Success;
+                    return (await _inner.UpdateOrderItemQuantityAsync(req)).Success;
                 }
             case OpRemoveItem:
                 {
                     var itemId = OfflineQueue.Deserialize<string>(item.Payload);
-                    var r = await _inner.RemoveOrderItemAsync(itemId);
-                    return r.Success;
+                    return (await _inner.RemoveOrderItemAsync(itemId)).Success;
                 }
             default:
                 _logger.LogWarning("Bilinmeyen kuyruk işlemi: {Op}", item.Operation);
-                return true; // kuyruğu bloke etmesin, sil
+                return true;
         }
     }
+
+    // CancelOrder için kuyruk payload tipi
+    private record CancelPayload(string OrderId, string TableId);
 }

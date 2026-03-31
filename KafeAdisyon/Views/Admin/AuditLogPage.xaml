@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="KafeAdisyon.Views.Admin.AuditLogPage"
+             Title="İşlem Takibi"
+             BackgroundColor="#FAF7F2">
+
+    <Grid RowDefinitions="Auto,*">
+
+        <!-- Başlık -->
+        <Border Grid.Row="0"
+                BackgroundColor="#3D2314"
+                StrokeThickness="0"
+                Padding="20,14">
+            <Grid ColumnDefinitions="*,Auto">
+                <Label Text="🔍 İşlem Takibi"
+                       FontSize="18" FontAttributes="Bold"
+                       TextColor="White"
+                       VerticalOptions="Center"/>
+                <Button Grid.Column="1"
+                        Text="🔄 Yenile"
+                        BackgroundColor="#5C3317"
+                        TextColor="White"
+                        CornerRadius="10"
+                        HeightRequest="36"
+                        FontSize="13"
+                        Clicked="OnRefreshClicked"/>
+            </Grid>
+        </Border>
+
+        <!-- Liste -->
+        <ScrollView Grid.Row="1" Padding="16">
+            <VerticalStackLayout x:Name="LogListLayout" Spacing="8">
+
+                <ActivityIndicator x:Name="Spinner"
+                                   IsRunning="True" IsVisible="True"
+                                   Color="#C8702A" HeightRequest="48"/>
+
+                <Label x:Name="LblEmpty"
+                       IsVisible="False"
+                       Text="Henüz kayıt yok."
+                       TextColor="#A0856A" FontSize="13"
+                       HorizontalOptions="Center"
+                       Margin="0,30"/>
+
+            </VerticalStackLayout>
+        </ScrollView>
+
+    </Grid>
+</ContentPage>

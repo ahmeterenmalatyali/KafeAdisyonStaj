@@ -1,7 +1,8 @@
 using KafeAdisyon.Application.Interfaces;
+using KafeAdisyon.Infrastructure.Services;
+using KafeAdisyon.ViewModels;
 using KafeAdisyon.Views.Admin;
 using KafeAdisyon.Views.Waiter;
-using KafeAdisyon.ViewModels;
 
 namespace KafeAdisyon.Views;
 
@@ -12,17 +13,61 @@ public partial class LoginPage : ContentPage
         InitializeComponent();
     }
 
-    private async void OnAdminClicked(object sender, EventArgs e)
+    private async void OnLoginClicked(object sender, EventArgs e)
     {
+        var email = EntryEmail.Text?.Trim() ?? string.Empty;
+        var password = EntryPassword.Text ?? string.Empty;
+        var device = EntryDevice.Text?.Trim() ?? string.Empty;
+
+        if (string.IsNullOrEmpty(email) ||
+            string.IsNullOrEmpty(password) ||
+            string.IsNullOrEmpty(device))
+        {
+            ShowError("Lütfen tüm alanları doldurun.");
+            return;
+        }
+
+        SetLoading(true);
+
         var services = Handler.MauiContext!.Services;
-        var vm = services.GetService<AdminViewModel>()!;
+        var authService = services.GetService<IAuthService>()!;
+        var result = await authService.LoginAsync(email, password, device);
+
+        SetLoading(false);
+
+        if (!result.Success)
+        {
+            ShowError(result.Message);
+            return;
+        }
+
+        // Rol bazlı yönlendirme
+        var role = result.Data!;
         var reportService = services.GetService<ISalesReportService>()!;
-        await Navigation.PushAsync(new AdminPage(vm, reportService));
+
+        if (role == "admin")
+        {
+            var vm = services.GetService<AdminViewModel>()!;
+            await Navigation.PushAsync(new AdminPage(vm, reportService));
+        }
+        else
+        {
+            var vm = services.GetService<AdminViewModel>()!;
+            await Navigation.PushAsync(new WaiterPage(vm));
+        }
     }
 
-    private async void OnWaiterClicked(object sender, EventArgs e)
+    private void ShowError(string message)
     {
-        var vm = Handler.MauiContext!.Services.GetService<AdminViewModel>()!;
-        await Navigation.PushAsync(new WaiterPage(vm));
+        LblError.Text = message;
+        LblError.IsVisible = true;
+    }
+
+    private void SetLoading(bool loading)
+    {
+        Spinner.IsRunning = loading;
+        Spinner.IsVisible = loading;
+        BtnLogin.IsEnabled = !loading;
+        LblError.IsVisible = false;
     }
 }

@@ -8,17 +8,22 @@ namespace KafeAdisyon.Infrastructure.Services;
 
 /// <summary>
 /// Sipariş ve sipariş kalemi işlemlerinin implementasyonu.
-/// AdministrativeAffairsService'deki GateService yapısıyla aynı pattern.
+/// Hesap kapatma ve sipariş iptali IAuditLogService üzerinden loglanır.
 /// </summary>
 public class OrderService : IOrderService
 {
     private readonly DatabaseClient _client;
     private readonly ITableService _tableService;
+    private readonly IAuditLogService _audit;
 
-    public OrderService(DatabaseClient client, ITableService tableService)
+    public OrderService(
+        DatabaseClient client,
+        ITableService tableService,
+        IAuditLogService audit)
     {
         _client = client;
         _tableService = tableService;
+        _audit = audit;
     }
 
     public async Task<BaseResponse<OrderModel?>> GetActiveOrderByTableAsync(string tableId)
@@ -77,11 +82,58 @@ public class OrderService : IOrderService
             if (!tableResult.Success)
                 return BaseResponse<object>.ErrorResult(tableResult.Message);
 
+            // ── Audit Log ──────────────────────────────────────────
+            await _audit.LogAsync(
+                action: "hesap_kapatma",
+                detail: $"Masa {request.TableId} — ₺{request.FinalTotal:F2}");
+
             return BaseResponse<object>.SuccessResult(null, "Hesap kapatıldı");
         }
         catch (Exception ex)
         {
             return BaseResponse<object>.ErrorResult($"Hesap kapatılamadı: {ex.Message}");
+        }
+    }
+
+    public async Task<BaseResponse<object>> CancelOrderAsync(string orderId, string tableId)
+    {
+        try
+        {
+            // Sipariş kalemlerini sil
+            var items = await _client.Db
+                .Table<OrderItemModel>()
+                .Where(i => i.OrderId == orderId)
+                .Get();
+
+            foreach (var item in items.Models)
+            {
+                await _client.Db
+                    .Table<OrderItemModel>()
+                    .Where(i => i.Id == item.Id)
+                    .Delete();
+            }
+
+            // Siparişi iptal et
+            await _client.Db
+                .Table<OrderModel>()
+                .Where(o => o.Id == orderId)
+                .Set(o => o.Status, "iptal")
+                .Update();
+
+            // Masayı boşalt
+            await _tableService.UpdateTableStatusAsync(
+                new UpdateTableStatusRequest { TableId = tableId, Status = "bos" });
+
+            // ── Audit Log ──────────────────────────────────────────
+            await _audit.LogAsync(
+                action: "siparis_iptali",
+                detail: $"Sipariş {orderId} iptal edildi (Masa {tableId})");
+
+            return BaseResponse<object>.SuccessResult(null, "Sipariş iptal edildi");
+        }
+        catch (Exception ex)
+        {
+            return BaseResponse<object>.ErrorResult($"Sipariş iptal edilemedi: {ex.Message}");
         }
     }
 
