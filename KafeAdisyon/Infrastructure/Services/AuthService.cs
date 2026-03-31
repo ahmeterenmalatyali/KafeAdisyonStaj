@@ -57,7 +57,7 @@ public class AuthService : IAuthService
                 var msg = errDoc.RootElement
                     .TryGetProperty("error_description", out var prop)
                     ? prop.GetString() ?? "Giriş başarısız."
-                    : "Giriş başarısız.";
+                    : err;
                 return BaseResponse<string>.ErrorResult(msg);
             }
 

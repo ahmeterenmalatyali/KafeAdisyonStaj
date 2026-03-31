@@ -18,6 +18,7 @@ Maksimum 3-4 cihaz eş zamanlı kullanım, kendi sunucusu yok.
 |--------|-----------|
 | UI | .NET MAUI (.NET 9) |
 | Backend | Postgrest.Client (Supabase direkt erişim) |
+| Auth | Supabase Auth (JWT — email/şifre) |
 | Mimari | Clean Architecture + MVVM |
 | IDE | Visual Studio 2022 Community |
 
@@ -30,6 +31,8 @@ tables      → id, name, status ('bos'|'dolu'), created_at
 menu_items  → id, name, category, price (double), is_active, created_at
 orders      → id, table_id, status ('aktif'|'odendi'), total (double), created_at
 order_items → id, order_id, menu_item_id, quantity, price (double), created_at
+profiles    → id (auth.users FK), full_name, role ('admin'|'garson'), created_at
+audit_logs  → id, user_id, user_name, role, action, detail, device_name, created_at
 ```
 
 Bağlantı bilgileri `appsettings.json` içinde — bu dosya `.gitignore`'da, repoya gitmiyor.
@@ -40,13 +43,33 @@ Bağlantı bilgileri `appsettings.json` içinde — bu dosya `.gitignore`'da, re
 
 ### Altyapı
 - [x] Clean Architecture katmanları (Application / Infrastructure / Common)
-- [x] `DatabaseClient` — Postgrest bağlantısı
+- [x] `DatabaseClient` — Postgrest bağlantısı + `SetAuthToken` / `ClearAuthToken`
 - [x] `BaseResponse<T>` — ortak servis dönüş tipi
 - [x] `IMenuService`, `IOrderService`, `ITableService` arayüzleri
 - [x] Servis implementasyonları (MenuService, OrderService, TableService)
 - [x] DI container kurulumu (`MauiProgram.cs`)
 - [x] `appsettings.json` → `EmbeddedResource` olarak gömme
 - [x] Environment variable desteği (CI/CD için)
+
+### Auth & Session
+- [x] Supabase Auth — email/şifre + JWT token tabanlı giriş
+- [x] `IAuthService` + `AuthService` — Supabase Auth REST API ile login/logout
+- [x] `SessionContext` — login olan kullanıcıyı + cihaz adını tutan singleton
+- [x] `ProfileModel` — `profiles` tablosu Postgrest modeli
+- [x] Login sonrası rol bazlı yönlendirme (admin → AdminPage, garson → WaiterPage)
+- [x] `LoginPage` yeniden yazıldı — email / şifre / cihaz adı formu
+
+### İşlem Takibi (Audit Log)
+- [x] `IAuditLogService` + `AuditLogService` — log yazma ve okuma
+- [x] `AuditLogModel` — `audit_logs` tablosu Postgrest modeli
+- [x] Supabase'de `profiles` ve `audit_logs` tabloları + RLS politikaları
+- [x] Hesap kapatma loglanıyor (`hesap_kapatma`)
+- [x] Sipariş iptali loglanıyor (`siparis_iptali`)
+- [x] Fiyat güncelleme loglanıyor (`fiyat_guncelleme`)
+- [x] Ürün ekleme loglanıyor (`urun_ekleme`)
+- [x] Ürün silme loglanıyor (`urun_silme`)
+- [x] `AuditLogPage` — Admin paneli işlem takibi ekranı (kullanıcı, cihaz, zaman)
+- [x] AdminPage'e "🔍 Log" sekmesi eklendi
 
 ### Admin Paneli
 - [x] Masa düzeni — 14 masa, renk durumu (boş/dolu)
@@ -106,6 +129,9 @@ Bağlantı bilgileri `appsettings.json` içinde — bu dosya `.gitignore`'da, re
 | Çoklu silmede bazı ürünler atlanıyor | `RemoveItemDbOnlyAsync` → `ReloadOrderItemsAsync` |
 | Ürün ekleme yavaş hissettiriyor | Optimistic update: önce UI, sonra DB |
 | Storage SDK deadlock yapıyor | `SupabaseStorageService`'de HttpClient ile doğrudan REST API kullanıldı |
+| `QuestPDF` — `Colors` / `IContainer` namespace çakışması | `using QColors = QuestPDF.Helpers.Colors` alias'ı eklendi |
+| `StrokeShape="RoundRectangle CornerRadius='12'"` derleme hatası | `StrokeShape="RoundRectangle 12"` syntax'ına geçildi |
+| `AuditLogService.cs` içine yanlış kod yapıştırıldı | Dosya içeriği `AuthService` ile aynıydı, doğru `AuditLogService` kodu yazıldı |
 
 ---
 
@@ -118,12 +144,22 @@ Bağlantı bilgileri `appsettings.json` içinde — bu dosya `.gitignore`'da, re
 - [x] DI kaydı — `MauiProgram.cs`'e `SupabaseStorageService` ve `ISalesReportService` eklendi
 - [x] Admin paneline "📊 Rapor" sekmesi eklendi
 
+### Supabase Auth & İşlem Takibi (34. Gün)
+- [x] Supabase Auth entegrasyonu — JWT token tabanlı email/şifre girişi
+- [x] `profiles` ve `audit_logs` tabloları Supabase'de oluşturuldu + RLS politikaları
+- [x] `SessionContext` singleton — kullanıcı bilgilerini uygulama boyunca taşıyor
+- [x] `AuthService` — Supabase Auth REST API ile login/logout (SDK deadlock'u nedeniyle HttpClient kullanıldı)
+- [x] `AuditLogService` — tüm kritik işlemler otomatik loglanıyor
+- [x] `LoginPage` yeniden tasarlandı — email / şifre / cihaz adı formu
+- [x] `AuditLogPage` — Admin'in işlem geçmişini göreceği ekran
+- [x] AdminPage'e 4. sekme eklendi: "🔍 Log"
+- [x] `DatabaseClient.SetAuthToken()` — login sonrası JWT Postgrest header'ına enjekte ediliyor
+
 ---
 
 ## Sonraki Adımlar (Opsiyonel)
 
-- [ ] Günlük satış özeti ekranı (kapanan siparişlerin toplamı) ✅ 33. günde yapıldı
-- [ ] Offline kuyruk — ağ yokken beklet, bağlanınca gönder ✅ 29-30. günlerde yapıldı
 - [ ] XML doc comment'ler (`/// <summary>`)
 - [ ] Rapor sayfasına özel tarih aralığı seçici (DatePicker — Windows uyumluluğu test edilmeli)
 - [ ] Aylık rapor desteği
+- [ ] Logout butonu WaiterPage'e de eklenmeli

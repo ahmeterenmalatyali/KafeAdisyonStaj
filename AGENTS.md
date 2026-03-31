@@ -9,7 +9,7 @@ Projeye yeni başlarken veya bir şeyi unutunca buraya bakıyorum.
 - **Platform:** Windows masaüstü + Android (iOS/macOS hedeflenmiyor)
 - **Dil:** C# / .NET 9 / .NET MAUI
 - **Backend:** Postgrest.Client ile Supabase'e direkt bağlantı
-- **Auth yok** — giriş ekranında sadece iki buton var: Admin ve Garson
+- **Auth:** Supabase Auth — email/şifre + JWT token (`AuthService` → `SessionContext`)
 - **Navigation:** Shell yok, `NavigationPage` + `Navigation.PushAsync()` kullanıyorum
 
 ---
@@ -18,7 +18,7 @@ Projeye yeni başlarken veya bir şeyi unutunca buraya bakıyorum.
 
 | Rol | Sayfa | Ne yapabiliyor |
 |-----|-------|----------------|
-| Admin | `AdminPage` | Masaları görüntüle, menü yönet, siparişi oku (read-only), hesap kapat/böl |
+| Admin | `AdminPage` | Masaları görüntüle, menü yönet, siparişi oku (read-only), hesap kapat/böl, log görüntüle |
 | Garson | `WaiterPage` | Masa aç, sipariş al, ürün ekle/çıkar, hesap kapat, iptal et |
 
 `OrderPage` `isReadOnly` parametresiyle açılıyor:
@@ -54,6 +54,7 @@ Bunları denedim, çalışmıyor:
 - **`Supabase SDK` Storage metotları** → aynı deadlock riski. `SupabaseStorageService`'de `HttpClient` + REST API kullanıyorum.
 - **`Picker`** → Windows'ta seçili değeri göstermiyor. Kategori seçimi için toggle `Button` listesi yaptım.
 - **`decimal` fiyat alanı** → Postgrest'te precision hatası veriyor (özellikle 5 ile biten fiyatlarda). Her yerde `double` kullanıyorum.
+- **`StrokeShape="RoundRectangle CornerRadius='12'"`** → derleme hatası. Doğrusu: `StrokeShape="RoundRectangle 12"`.
 
 ---
 
@@ -66,6 +67,78 @@ public decimal Price { get; set; }
 // DOĞRU
 public double Price { get; set; }
 ```
+
+---
+
+## QuestPDF Namespace Çakışması
+
+`SalesReportService.cs` dosyasında `Colors` ve `IContainer` hem MAUI hem QuestPDF'de tanımlı. Alias ile çözülüyor:
+
+```csharp
+using QColors    = QuestPDF.Helpers.Colors;
+using QContainer = QuestPDF.Infrastructure.IContainer;
+```
+
+Ayrıca `page.Header().Element(Action<IContainer>)` çalışmıyor — doğru kullanım:
+
+```csharp
+// YANLIŞ
+page.Header().Element(ComposeHeader(summary));
+
+// DOĞRU
+page.Header().Column(col => ComposeHeader(col, summary));
+```
+
+---
+
+## Supabase Auth — JWT Token
+
+Login sonrası JWT token Postgrest header'ına enjekte edilmeli, aksi halde RLS çalışmaz:
+
+```csharp
+// AuthService.LoginAsync() içinde — login başarılıysa
+_db.SetAuthToken(token);
+
+// Logout sonrası anon key'e dön
+_db.ClearAuthToken();
+```
+
+`DatabaseClient.SetAuthToken()` şunu yapıyor:
+```csharp
+Db.Options.Headers["Authorization"] = $"Bearer {jwtToken}";
+```
+
+---
+
+## SessionContext
+
+Login olan kullanıcının bilgilerini tüm uygulama boyunca taşır. `AddSingleton` olarak kayıtlı:
+
+```csharp
+_session.UserId      // Supabase Auth UUID
+_session.UserName    // profiles.full_name
+_session.Role        // "admin" | "garson"
+_session.DeviceName  // kullanıcının girdiği cihaz adı
+_session.IsLoggedIn  // bool
+_session.IsAdmin     // bool
+```
+
+---
+
+## Audit Log
+
+Kritik işlemleri loglamak için `IAuditLogService.LogAsync(action, detail)` çağrılıyor.
+`LogAsync` hata fırlatmaz — log yazılamaması asıl işlemi durdurmamalı.
+
+```csharp
+// OrderService.CloseOrderAsync içinde
+await _audit.LogAsync("hesap_kapatma", $"Masa {tableId} — ₺{total:F2}");
+
+// MenuService.UpdateMenuItemAsync içinde (sadece fiyat değiştiyse)
+await _audit.LogAsync("fiyat_guncelleme", $"{name}: ₺{eskiFiyat} → ₺{yeniFiyat}");
+```
+
+Aksiyon sabitleri: `hesap_kapatma` | `siparis_iptali` | `fiyat_guncelleme` | `urun_ekleme` | `urun_silme`
 
 ---
 
@@ -176,21 +249,25 @@ if (stale.Data != null)
 ```
 KafeAdisyon/
 ├── Application/
-│   ├── Interfaces/          → IMenuService, IOrderService, ITableService, IConnectivityService, ISalesReportService
+│   ├── Interfaces/          → IMenuService, IOrderService, ITableService,
+│   │                          IConnectivityService, ISalesReportService,
+│   │                          IAuthService, IAuditLogService
 │   └── DTOs/RequestModels/  → ReportDtos (OrderSummaryDto, ReportSummaryDto...)
 ├── Infrastructure/
 │   ├── Client/              → DatabaseClient.cs
 │   ├── Offline/             → OfflineQueue.cs
 │   └── Services/            → MenuService, OrderService, TableService,
 │                               ConnectivityService, OfflineAwareOrderService,
-│                               SalesReportService, SupabaseStorageService
+│                               SalesReportService, SupabaseStorageService,
+│                               AuthService, AuditLogService, SessionContext
 ├── ViewModels/              → AdminViewModel, OrderViewModel
 ├── Views/
-│   ├── LoginPage.xaml
-│   ├── Admin/               → AdminPage, EditMenuItemPage, SalesReportPage
+│   ├── LoginPage.xaml       → email/şifre/cihaz adı formu
+│   ├── Admin/               → AdminPage, EditMenuItemPage, SalesReportPage, AuditLogPage
 │   ├── Waiter/              → WaiterPage
 │   └── Order/               → OrderPage, SplitBillPage
-├── Models/                  → TableModel, MenuItemModel, OrderModel, OrderItemModel
+├── Models/                  → TableModel, MenuItemModel, OrderModel, OrderItemModel,
+│                               ProfileModel, AuditLogModel
 └── Common/                  → BaseResponse<T>
 ```
 
@@ -218,9 +295,3 @@ Public URL formatı:
 Bucket'ı Public olarak işaretlemeyi unutma:
 `Supabase Dashboard → Storage → reports bucket → Make Public`
 
----
-
-## Derleme Hatası Alınca Bakılacaklar- Model namespace'i `Postgrest.Attributes` / `Postgrest.Models` olmalı — `Supabase.Postgrest` yazınca derleme hatası veriyor.
-- Visual Studio bazen otomatik `using Android...` ekliyor, Windows build'ini kırıyor — build hatasında ilk bakılan yer.
-- Integration test projesinin `SharedDefinitions.cs` dosyasına yeni interface eklenince `IConnectivityService` de dahil olmak üzere `KafeAdisyon.Application.Interfaces` namespace'indeki tüm interface'lerin orada tanımlı olduğunu kontrol et (ana proje referans verilmiyor, elle kopyalanıyor).
-- Build sırasında `dotnet_bot.png` dosya kilidi hatası alınırsa: VS'yi kapat, `obj/` ve `bin/` klasörlerini sil, yeniden aç.
